@@ -167,7 +167,7 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
 
           .infinite-scroll-container {
             width: ${width};
-          }
+          }f
 
           .infinite-scroll-item {
             height: ${itemMinHeight}px;
