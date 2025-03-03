@@ -42,8 +42,8 @@ import React, {
     footerClassName = "",
     backButtonProps = {},
     nextButtonProps = {},
-    backButtonText = "Back",
-    nextButtonText = "Continue",
+    backButtonText = "Atrás",
+    nextButtonText = "Siguiente",
     disableStepIndicators = false,
     renderStepIndicator,
     ...rest
@@ -88,7 +88,7 @@ import React, {
         {...rest}
       >
         <div
-          className={`mx-auto w-full rounded-4xl shadow-xl ${stepCircleContainerClassName}`}
+          className={`mx-auto w-full rounded-4xl shadow-xl text-xl ${stepCircleContainerClassName}`}
         >
           <div
             className={`${stepContainerClassName} flex w-full items-center p-8`}
@@ -157,7 +157,7 @@ import React, {
                 )}
                 <Button
                   onClick={isLastStep ? handleComplete : handleNext}
-                  className="duration-350 flex items-center justify-center rounded-full bg-green-500 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-green-600 active:bg-green-700"
+                  className="duration-350 flex items-center justify-center rounded-full bg-blue-400 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-blue-600 active:bg-blue-700"
                   {...nextButtonProps}
                 >
                   {isLastStep ? "Complete" : nextButtonText}
@@ -302,9 +302,9 @@ import React, {
       >
         <motion.div
           variants={{
-            inactive: { scale: 1, backgroundColor: "#222", color: "#a3a3a3" },
-            active: { scale: 1, backgroundColor: "#00d8ff", color: "#00d8ff" },
-            complete: { scale: 1, backgroundColor: "#00d8ff", color: "#3b82f6" },
+            inactive: { scale: 1, backgroundColor: "#342379", color: "#a3a3a3" },
+            active: { scale: 1, backgroundColor: "#6c49ff", color: "#00d8ff" },
+            complete: { scale: 1, backgroundColor: "#9c49ff", color: "#3b82f6" },
           }}
           transition={{ duration: 0.3 }}
           className="flex h-8 w-8 items-center justify-center rounded-full font-semibold"
@@ -328,7 +328,7 @@ import React, {
   function StepConnector({ isComplete }: StepConnectorProps) {
     const lineVariants: Variants = {
       incomplete: { width: 0, backgroundColor: "transparent" },
-      complete: { width: "100%", backgroundColor: "#00d8ff" },
+      complete: { width: "100%", backgroundColor: "#8449ff" },
     };
   
     return (
