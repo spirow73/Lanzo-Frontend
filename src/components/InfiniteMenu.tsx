@@ -1,3 +1,13 @@
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  useDeployContainer,
+  useStopContainer,
+  useGetPortMapping,
+  DeploymentResponse,
+  PortMappingResponse,
+} from "../hooks/useDocker"; // Ajusta la ruta según corresponda
+
 import { FC, useRef, useState, useEffect, MutableRefObject } from "react";
 import { mat4, quat, vec2, vec3 } from "gl-matrix";
 
@@ -713,11 +723,14 @@ class ArcballControl {
 // -------- InfiniteGridMenu --------
 
 interface MenuItem {
-  image: string;
-  link: string;
-  title: string;
-  description: string;
+    image: string;
+    deploy: string;
+    delete: string;
+    port: string;
+    title: string;
+    description: string;
 }
+
 
 type ActiveItemCallback = (index: number) => void;
 type MovementChangeCallback = (isMoving: boolean) => void;
@@ -1264,159 +1277,203 @@ class InfiniteGridMenu {
 // -------- Default Items --------
 
 const defaultItems: MenuItem[] = [
-  {
-    image: "https://picsum.photos/900/900?grayscale",
-    link: "https://google.com/",
-    title: "",
-    description: "",
-  },
-];
+    {
+      image: "https://picsum.photos/900/900?grayscale",
+      deploy: "wordpress",
+      delete: "wordpress",
+      port: "wordpress",
+      title: "WordPress",
+      description: "Servicio de WordPress",
+    },
+  ];
+  
 
 // -------- React Component --------
-
 interface InfiniteMenuProps {
-  items?: MenuItem[];
-}
-
-const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [] }) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(
-    null
-  ) as MutableRefObject<HTMLCanvasElement | null>;
-  const [activeItem, setActiveItem] = useState<MenuItem | null>(null);
-  const [isMoving, setIsMoving] = useState<boolean>(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    let sketch: InfiniteGridMenu | null = null;
-
-    const handleActiveItem = (index: number) => {
-      if (!items.length) return;
-      const itemIndex = index % items.length;
-      setActiveItem(items[itemIndex]);
-    };
-
-    if (canvas) {
-      sketch = new InfiniteGridMenu(
-        canvas,
-        items.length ? items : defaultItems,
-        handleActiveItem,
-        setIsMoving,
-        (sk) => sk.run()
-      );
-    }
-
-    const handleResize = () => {
-      if (sketch) {
-        sketch.resize();
+    items?: MenuItem[];
+  }
+  
+  const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [] }) => {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null) as MutableRefObject<HTMLCanvasElement | null>;
+    const [activeItem, setActiveItem] = useState<MenuItem | null>(null);
+    const [isMoving, setIsMoving] = useState<boolean>(false);
+    const [portMapping, setPortMapping] = useState<PortMappingResponse | null>(null);
+  
+    // Desestructuramos solo lo que se utiliza para evitar warnings de variables no usadas
+    const { deploy, loading: deployLoading } = useDeployContainer();
+    const { stop, loading: stopLoading } = useStopContainer();
+    const { getPortMapping, loading: portLoading } = useGetPortMapping();
+  
+    // Handlers para cada acción. Se usa "unknown" en el catch para evitar "any".
+    const handleDeploy = async () => {
+      if (!activeItem) return;
+      try {
+        const result: DeploymentResponse | null = await deploy(activeItem.deploy);
+        if (result && result.message) {
+          toast.success(result.message);
+        } else {
+          toast.error("No se obtuvo respuesta en el deploy.");
+        }
+        console.log("Deploy result:", result);
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Error al desplegar el contenedor.";
+        toast.error(message);
       }
     };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
+  
+    const handleStop = async () => {
+      if (!activeItem) return;
+      try {
+        const result: DeploymentResponse | null = await stop(activeItem.delete);
+        if (result && result.message) {
+          toast.success(result.message);
+        } else {
+          toast.error("No se obtuvo respuesta al detener el contenedor.");
+        }
+        console.log("Stop result:", result);
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Error al detener el contenedor.";
+        toast.error(message);
+      }
     };
-  }, [items]);
-
-  const handleButtonClick = () => {
-    if (!activeItem?.link) return;
-    if (activeItem.link.startsWith("http")) {
-      window.open(activeItem.link, "_blank");
-    } else {
-      // internal route logic here
-      console.log("Internal route:", activeItem.link);
-    }
-  };
-
-  return (
-    <div className="relative w-full h-full">
-      <canvas
-        id="infinite-grid-menu-canvas"
-        ref={canvasRef}
-        className="cursor-grab w-full h-full overflow-hidden relative outline-none active:cursor-grabbing"
-      />
-
-      {activeItem && (
-        <>
-          {/* Title */}
-          <h2
-            className={`
-          select-none
-          absolute
-          font-black
-          [font-size:4rem]
-          left-[1.6em]
-          top-1/2
-          transform
-          translate-x-[20%]
-          -translate-y-1/2
-          transition-all
-          ease-[cubic-bezier(0.25,0.1,0.25,1.0)]
-          ${
-            isMoving
-              ? "opacity-0 pointer-events-none duration-[100ms]"
-              : "opacity-100 pointer-events-auto duration-[500ms]"
-          }
-        `}
-          >
-            {activeItem.title}
-          </h2>
-
-          {/* Description */}
-          <p
-            className={`
-          select-none
-          absolute
-          max-w-[10ch]
-          text-[1.5rem]
-          top-1/2
-          right-[1%]
-          transition-all
-          ease-[cubic-bezier(0.25,0.1,0.25,1.0)]
-          ${
-            isMoving
-              ? "opacity-0 pointer-events-none duration-[100ms] translate-x-[-60%] -translate-y-1/2"
-              : "opacity-100 pointer-events-auto duration-[500ms] translate-x-[-90%] -translate-y-1/2"
-          }
-        `}
-          >
-            {activeItem.description}
-          </p>
-
-          {/* Action Button */}
-          <div
-            onClick={handleButtonClick}
-            className={`
-          absolute
-          left-1/2
-          z-10
-          w-[60px]
-          h-[60px]
-          grid
-          place-items-center
-          bg-[#00ffff]
-          border-[5px]
-          border-black
-          rounded-full
-          cursor-pointer
-          transition-all
-          ease-[cubic-bezier(0.25,0.1,0.25,1.0)]
-          ${
-            isMoving
-              ? "bottom-[-80px] opacity-0 pointer-events-none duration-[100ms] scale-0 -translate-x-1/2"
-              : "bottom-[3.8em] opacity-100 pointer-events-auto duration-[500ms] scale-100 -translate-x-1/2"
-          }
-        `}
-          >
-            <p className="select-none relative text-[#060606] top-[2px] text-[26px]">
-              &#x2197;
+  
+    const handleGetPort = async () => {
+      if (!activeItem) return;
+      try {
+        const result: PortMappingResponse | null = await getPortMapping(activeItem.port);
+        console.log("Port mapping:", result);
+        if (result) {
+          setPortMapping(result);
+          toast.success("Mapeo de puertos obtenido correctamente.");
+        }
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Error al obtener el mapeo de puertos.";
+        toast.error(message);
+      }
+    };
+  
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      let sketch: InfiniteGridMenu | null = null;
+  
+      const handleActiveItem = (index: number) => {
+        if (!items.length) return;
+        const itemIndex = index % items.length;
+        setActiveItem(items[itemIndex]);
+      };
+  
+      if (canvas) {
+        sketch = new InfiniteGridMenu(
+          canvas,
+          items.length ? items : defaultItems,
+          handleActiveItem,
+          setIsMoving,
+          (sk) => sk.run()
+        );
+      }
+  
+      const handleResize = () => {
+        if (sketch) {
+          sketch.resize();
+        }
+      };
+  
+      window.addEventListener("resize", handleResize);
+      handleResize();
+  
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }, [items]);
+  
+    return (
+      <div className="relative w-full h-full">
+        <canvas
+          id="infinite-grid-menu-canvas"
+          ref={canvasRef}
+          className="cursor-grab w-full h-full overflow-hidden relative outline-none active:cursor-grabbing"
+        />
+  
+        {activeItem && (
+          <>
+            {/* Title */}
+            <h2
+              className={`
+                select-none
+                absolute
+                font-black
+                [font-size:4rem]
+                left-[1.6em]
+                top-1/2
+                transform
+                translate-x-[20%]
+                -translate-y-1/2
+                transition-all
+                ease-[cubic-bezier(0.25,0.1,0.25,1.0)]
+                ${isMoving ? "opacity-0 pointer-events-none duration-[100ms]" : "opacity-100 pointer-events-auto duration-[500ms]"}
+              `}
+            >
+              {activeItem.title}
+            </h2>
+  
+            {/* Description */}
+            <p
+              className={`
+                select-none
+                absolute
+                max-w-[10ch]
+                text-[1.5rem]
+                top-1/2
+                right-[1%]
+                transition-all
+                ease-[cubic-bezier(0.25,0.1,0.25,1.0)]
+                ${isMoving ? "opacity-0 pointer-events-none duration-[100ms] translate-x-[-60%] -translate-y-1/2" : "opacity-100 pointer-events-auto duration-[500ms] translate-x-[-90%] -translate-y-1/2"}
+              `}
+            >
+              {activeItem.description}
             </p>
+  
+            {/* Botones de acción */}
+            <div className="absolute bottom-[3.8em] left-1/2 transform -translate-x-1/2 flex gap-4">
+              <button
+                onClick={handleDeploy}
+                disabled={deployLoading}
+                className="w-[60px] h-[60px] bg-[#00ffff] border-[5px] border-black rounded-full flex items-center justify-center"
+              >
+                {deployLoading ? "..." : "Deploy"}
+              </button>
+              <button
+                onClick={handleStop}
+                disabled={stopLoading}
+                className="w-[60px] h-[60px] bg-[#00ffff] border-[5px] border-black rounded-full flex items-center justify-center"
+              >
+                {stopLoading ? "..." : "Stop"}
+              </button>
+              <button
+                onClick={handleGetPort}
+                disabled={portLoading}
+                className="w-[60px] h-[60px] bg-[#00ffff] border-[5px] border-black rounded-full flex items-center justify-center"
+              >
+                {portLoading ? "..." : "Port"}
+              </button>
+            </div>
+          </>
+        )}
+  
+        {/* Muestra información del port mapping si existe */}
+        {portMapping && (
+          <div className="absolute bottom-4 right-4 bg-white p-4 rounded shadow">
+            <h2 className="font-bold">Port Mapping</h2>
+            <pre className="text-sm">{JSON.stringify(portMapping.ports, null, 2)}</pre>
           </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-export default InfiniteMenu;
+        )}
+  
+        <ToastContainer />
+      </div>
+    );
+  };
+  
+  export default InfiniteMenu;
