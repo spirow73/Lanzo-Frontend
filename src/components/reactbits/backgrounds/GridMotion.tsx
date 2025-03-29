@@ -2,13 +2,12 @@ import { useEffect, useRef, FC, useState } from "react";
 import { gsap } from "gsap";
 
 interface GridMotionProps {
-  items?: string[];
+  items: React.ReactNode[];
   gradientColor?: string;
 }
 
 const GridMotion: FC<GridMotionProps> = ({
   items = [],
-  gradientColor = "grey",
 }) => {
   const gridRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);

@@ -10,23 +10,141 @@ import TextPressure from "@/components/reactbits/TextPressure";
 import Iridescence from "@/components/reactbits/backgrounds/Iridescence";
 import GridMotionBackground from "@/components/reactbits/backgrounds/GridMotion";
 
-// Importar el componente SimpleItem
-import SimpleItem from "@/components/SimpleItem";
+import { useNavigate } from "react-router-dom";
 
 // Importar SpotlightCard para la sección de pasos
 import SpotlightCard from "@/components/reactbits/SpotlightCard";
+import {
+  CloudIcon,
+  LockIcon,
+  TrendingUpIcon,
+  LifeBuoyIcon,
+  SettingsIcon,
+  ZapIcon,
+  SmileIcon,
+  CodeIcon,
+  RocketIcon,
+  ActivityIcon,
+  ShieldCheckIcon,
+  DatabaseIcon,
+  GlobeIcon,
+  LayersIcon,
+  CpuIcon,
+  ServerIcon,
+  ClockIcon,
+  BellIcon,
+} from "lucide-react";
 
-import { CloudIcon } from "lucide-react";
+const items = [
+  // Feature 1: Implementación en segundos
+  <div key="feature1" className="p-4 flex flex-col items-center text-center">
+    <CloudIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Implementación en segundos</span>
+  </div>,
 
-const simpleItems = [
-  <SimpleItem key="item1" title="Rápido" description="Implementación en segundos" />,
-  <SimpleItem key="item2" title="Seguro" description="Protección de datos garantizada" />,
-  <SimpleItem key="item3" title="Escalable" description="Se adapta a tu crecimiento" />,
-  <SimpleItem key="item4" title="Flexible" description="Integración con diversas herramientas" />,
-  <SimpleItem key="item5" title="Soporte 24/7" description="Atención constante para resolver dudas" />,
-  <SimpleItem key="item6" title="Innovador" description="Tecnología de vanguardia" />,
-  <SimpleItem key="item7" title="Intuitivo" description="Fácil de usar y configurar" />,
+  // Feature 2: Protección de datos garantizada
+  <div key="feature2" className="p-4 flex flex-col items-center text-center">
+    <LockIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Protección de datos garantizada</span>
+  </div>,
+
+  // Feature 3: Escalabilidad a medida
+  <div key="feature3" className="p-4 flex flex-col items-center text-center">
+    <TrendingUpIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Escalabilidad a medida</span>
+  </div>,
+
+  // Feature 4: Soporte 24/7
+  <div key="feature4" className="p-4 flex flex-col items-center text-center">
+    <LifeBuoyIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Soporte 24/7</span>
+  </div>,
+
+  // Feature 5: Integración con herramientas
+  <div key="feature5" className="p-4 flex flex-col items-center text-center">
+    <SettingsIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Integración con herramientas</span>
+  </div>,
+
+  // Feature 6: Tecnología de vanguardia
+  <div key="feature6" className="p-4 flex flex-col items-center text-center">
+    <ZapIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Tecnología de vanguardia</span>
+  </div>,
+
+  // Feature 7: Interfaz intuitiva
+  <div key="feature7" className="p-4 flex flex-col items-center text-center">
+    <SmileIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Interfaz intuitiva</span>
+  </div>,
+
+  // Feature 8: Personalización avanzada
+  <div key="feature8" className="p-4 flex flex-col items-center text-center">
+    <CodeIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Personalización avanzada</span>
+  </div>,
+
+  // Feature 9: Despliegue automático
+  <div key="feature9" className="p-4 flex flex-col items-center text-center">
+    <RocketIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Despliegue automático</span>
+  </div>,
+
+  // Feature 10: Monitorización en tiempo real
+  <div key="feature10" className="p-4 flex flex-col items-center text-center">
+    <ActivityIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Monitorización en tiempo real</span>
+  </div>,
+
+  // Feature 11: Seguridad multinivel
+  <div key="feature11" className="p-4 flex flex-col items-center text-center">
+    <ShieldCheckIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Seguridad multinivel</span>
+  </div>,
+
+  // Feature 12: Gestión de datos eficiente
+  <div key="feature12" className="p-4 flex flex-col items-center text-center">
+    <DatabaseIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Gestión de datos eficiente</span>
+  </div>,
+
+  // Feature 13: Acceso global optimizado
+  <div key="feature13" className="p-4 flex flex-col items-center text-center">
+    <GlobeIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Acceso global optimizado</span>
+  </div>,
+
+  // Feature 14: Arquitectura modular
+  <div key="feature14" className="p-4 flex flex-col items-center text-center">
+    <LayersIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Arquitectura modular</span>
+  </div>,
+
+  // Feature 15: Optimizado con IA
+  <div key="feature15" className="p-4 flex flex-col items-center text-center">
+    <CpuIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Optimizado con IA</span>
+  </div>,
+
+  // Feature 16: Rendimiento constante
+  <div key="feature16" className="p-4 flex flex-col items-center text-center">
+    <ServerIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Rendimiento constante</span>
+  </div>,
+
+  // Feature 17: Alta disponibilidad
+  <div key="feature17" className="p-4 flex flex-col items-center text-center">
+    <ClockIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Alta disponibilidad</span>
+  </div>,
+
+  // Feature 18: Notificaciones inteligentes
+  <div key="feature18" className="p-4 flex flex-col items-center text-center">
+    <BellIcon className="h-8 w-8" />
+    <span className="mt-2 text-lg">Notificaciones inteligentes</span>
+  </div>,
 ];
+
 
 const menuItems = [
   { label: "Características", to: "#features" },
@@ -40,6 +158,11 @@ const navVariants = {
 };
 
 const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleStart = () => {
+    navigate("/deployment");
+  };
 
   return (
     <div className="relative flex flex-col min-h-screen">
@@ -48,7 +171,6 @@ const LandingPage: React.FC = () => {
         mouseReact={false}
         amplitude={0.1}
         speed={1.0}
-        className="absolute w-full h-full inset-0 z-0"
       />
 
       {/* HEADER fijo con superposición total */}
@@ -108,12 +230,13 @@ const LandingPage: React.FC = () => {
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-4">
-                <Button
-                  variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-[#2D033B] text-lg px-10 py-7 text-xl"
-                >
-                  Empezar ya
-                </Button>
+              <Button
+                variant="outline"
+                onClick={handleStart}
+                className="border-white text-white hover:bg-white hover:text-[#2D033B] text-lg px-10 py-7 text-xl"
+              >
+                Empezar ya
+              </Button>
               </div>
             </div>
           </div>
@@ -121,7 +244,7 @@ const LandingPage: React.FC = () => {
 
         {/* SECCIÓN DE ITEMS CON GRID MOTION */}
         <section id="features">
-          <GridMotionBackground items={simpleItems} gradientColor="#2D033B" />
+          <GridMotionBackground items={items} gradientColor="#2D033B" />
         </section>
 
         {/* SECCIÓN DE PASOS PARA SUBIR A LA NUBE */}
@@ -131,19 +254,19 @@ const LandingPage: React.FC = () => {
               Cómo subir tus archivos a la nube en 3 sencillos pasos
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(0, 229, 255, 0.2)">
+              <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(255, 0, 242, 0.2)">
                 <h3 className="text-2xl font-bold text-white mb-4">Paso 1: Selecciona tus archivos</h3>
                 <p className="text-white">
                   Elige los archivos que deseas subir, ya sea arrastrándolos o seleccionándolos desde tu dispositivo.
                 </p>
               </SpotlightCard>
-              <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(0, 229, 255, 0.2)">
+              <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(255, 0, 242, 0.2)">
                 <h3 className="text-2xl font-bold text-white mb-4">Paso 2: Inicia la carga</h3>
                 <p className="text-white">
                   Haz clic en el botón de "Subir" y espera a que la carga se complete de forma segura.
                 </p>
               </SpotlightCard>
-              <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(0, 229, 255, 0.2)">
+              <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(255, 0, 242, 0.2)">
                 <h3 className="text-2xl font-bold text-white mb-4">Paso 3: Accede a tu nube</h3>
                 <p className="text-white">
                   Una vez subidos, podrás acceder y gestionar tus archivos desde cualquier dispositivo.
