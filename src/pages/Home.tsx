@@ -161,6 +161,7 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleStart = () => {
+    console.log("Empezar ya clicked");
     navigate("/deployment");
   };
 
