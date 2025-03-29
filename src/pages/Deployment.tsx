@@ -10,6 +10,7 @@ import {
 const Deployment = () => {
   const [service, setService] = useState<string>("wordpress");
   const [portMapping, setPortMapping] = useState<PortMappingResponse | null>(null);
+  const [responseMessage, setResponseMessage] = useState<string>("");
 
   const {
     deploy,
@@ -29,11 +30,22 @@ const Deployment = () => {
 
   const handleDeploy = async () => {
     const result: DeploymentResponse | null = await deploy(service);
+    // Actualiza el mensaje de respuesta con el resultado
+    if (result && result.message) {
+      setResponseMessage(result.message);
+    } else {
+      setResponseMessage("No se obtuvo respuesta en el deploy.");
+    }
     console.log("Deploy result:", result);
   };
 
   const handleStop = async () => {
     const result: DeploymentResponse | null = await stop(service);
+    if (result && result.message) {
+      setResponseMessage(result.message);
+    } else {
+      setResponseMessage("No se obtuvo respuesta al detener el contenedor.");
+    }
     console.log("Stop result:", result);
   };
 
@@ -85,6 +97,13 @@ const Deployment = () => {
         </button>
         {portError && <p style={{ color: "red" }}>Error: {portError}</p>}
       </div>
+
+      {responseMessage && (
+        <div style={{ marginBottom: "1rem" }}>
+          <h2>Respuesta del API:</h2>
+          <p>{responseMessage}</p>
+        </div>
+      )}
 
       {portMapping && (
         <div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = "/docker";
 
 export interface DeploymentResponse {
   message: string;
