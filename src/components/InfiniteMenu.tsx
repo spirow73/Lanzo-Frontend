@@ -95,8 +95,7 @@ void main() {
     float containerAspect = 1.0; // Assuming square container
     
     // Calculate cover scale factor
-    float scale = max(imageAspect / containerAspect, 
-                     containerAspect / imageAspect);
+    float scale = min(imageAspect / containerAspect, containerAspect / imageAspect);
     
     // Rotate 180 degrees and adjust UVs for cover
     vec2 st = vec2(vUvs.x, 1.0 - vUvs.y);
@@ -724,12 +723,20 @@ class ArcballControl {
 
 interface MenuItem {
     image: string;
-    deploy: string;
-    delete: string;
-    port: string;
+    service: string;
     title: string;
     description: string;
-}
+  }
+  
+// Un item por defecto (ajusta los valores según corresponda)
+const defaultItems: MenuItem[] = [
+{
+    image: "https://picsum.photos/900/900?grayscale",
+    service: "wordpress",
+    title: "WordPress",
+    description: "Servicio de WordPress",
+},
+];
 
 
 type ActiveItemCallback = (index: number) => void;
@@ -1274,20 +1281,6 @@ class InfiniteGridMenu {
   }
 }
 
-// -------- Default Items --------
-
-const defaultItems: MenuItem[] = [
-    {
-      image: "https://picsum.photos/900/900?grayscale",
-      deploy: "wordpress",
-      delete: "wordpress",
-      port: "wordpress",
-      title: "WordPress",
-      description: "Servicio de WordPress",
-    },
-  ];
-  
-
 // -------- React Component --------
 interface InfiniteMenuProps {
     items?: MenuItem[];
@@ -1299,16 +1292,16 @@ interface InfiniteMenuProps {
     const [isMoving, setIsMoving] = useState<boolean>(false);
     const [portMapping, setPortMapping] = useState<PortMappingResponse | null>(null);
   
-    // Desestructuramos solo lo que se utiliza para evitar warnings de variables no usadas
+    // Extraemos únicamente lo necesario para evitar warnings
     const { deploy, loading: deployLoading } = useDeployContainer();
     const { stop, loading: stopLoading } = useStopContainer();
     const { getPortMapping, loading: portLoading } = useGetPortMapping();
   
-    // Handlers para cada acción. Se usa "unknown" en el catch para evitar "any".
+    // Handlers usando activeItem.service para todas las acciones
     const handleDeploy = async () => {
       if (!activeItem) return;
       try {
-        const result: DeploymentResponse | null = await deploy(activeItem.deploy);
+        const result: DeploymentResponse | null = await deploy(activeItem.service);
         if (result && result.message) {
           toast.success(result.message);
         } else {
@@ -1325,7 +1318,7 @@ interface InfiniteMenuProps {
     const handleStop = async () => {
       if (!activeItem) return;
       try {
-        const result: DeploymentResponse | null = await stop(activeItem.delete);
+        const result: DeploymentResponse | null = await stop(activeItem.service);
         if (result && result.message) {
           toast.success(result.message);
         } else {
@@ -1342,7 +1335,7 @@ interface InfiniteMenuProps {
     const handleGetPort = async () => {
       if (!activeItem) return;
       try {
-        const result: PortMappingResponse | null = await getPortMapping(activeItem.port);
+        const result: PortMappingResponse | null = await getPortMapping(activeItem.service);
         console.log("Port mapping:", result);
         if (result) {
           setPortMapping(result);

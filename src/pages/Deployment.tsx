@@ -1,25 +1,60 @@
-import InfiniteMenu from "../components/InfiniteMenu"; // Ajusta la ruta según corresponda
+// Deployment.tsx
+import InfiniteMenu from "../components/InfiniteMenu"; // Ajusta la ruta si tu InfiniteMenu está en otro lugar
+
+// Importa las imágenes locales (Vite/webpack se encargará de resolver las rutas).
+import awsLogo from "../assets/logos/aws.png";
+import canvasLogo from "../assets/logos/canvas.svg";
+import ghostLogo from "../assets/logos/ghost-logo.jpg";
+import localstackLogo from "../assets/logos/localstack.png";
+import ollamaLogo from "../assets/logos/ollama.webp";
+import openwebuiLogo from "../assets/logos/openwebui.svg";
+import wordpressLogo from "../assets/logos/wordpress.svg";
 
 const Deployment = () => {
-  // Define los items que mostrarás en el menú infinito
+  // Define los items que se mostrarán en el menú infinito
   const items = [
     {
-      image: "https://picsum.photos/900/900?grayscale",
-      deploy: "wordpress",  // Nombre del servicio para deploy
-      delete: "wordpress",  // Nombre del servicio para detener
-      port: "wordpress",    // Nombre del servicio para obtener mapping de puertos
+      image: wordpressLogo,
+      service: "wordpress",
       title: "WordPress",
       description: "Servicio de WordPress",
     },
     {
-      image: "https://picsum.photos/900/900?grayscale?1",
-      deploy: "localstack",
-      delete: "localstack",
-      port: "localstack",
+      image: localstackLogo,
+      service: "localstack",
       title: "LocalStack",
       description: "Servicio de LocalStack",
     },
-    // Puedes agregar más items según lo requieras
+    {
+      image: canvasLogo,
+      service: "canvas",
+      title: "Canvas",
+      description: "Servicio de Canvas",
+    },
+    {
+      image: openwebuiLogo,
+      service: "openwebui",
+      title: "OpenWebUI",
+      description: "Servicio de OpenWebUI",
+    },
+    {
+      image: ollamaLogo,
+      service: "ollama",
+      title: "Ollama",
+      description: "Servicio de Ollama",
+    },
+    {
+      image: awsLogo,
+      service: "aws",
+      title: "AWS",
+      description: "Servicio de AWS",
+    },
+    {
+      image: ghostLogo,
+      service: "ghost",
+      title: "Ghost",
+      description: "Servicio de Ghost",
+    },
   ];
 
   return (
