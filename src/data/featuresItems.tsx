@@ -90,41 +90,5 @@ export const featuresItems = [
   <div key="feature12" className="p-4 flex flex-col items-center text-center">
     <DatabaseIcon className="h-8 w-8" />
     <span className="mt-2 text-lg">Gestión de datos eficiente</span>
-  </div>,
-
-  // Feature 13: Acceso global optimizado
-  <div key="feature13" className="p-4 flex flex-col items-center text-center">
-    <GlobeIcon className="h-8 w-8" />
-    <span className="mt-2 text-lg">Acceso global optimizado</span>
-  </div>,
-
-  // Feature 14: Arquitectura modular
-  <div key="feature14" className="p-4 flex flex-col items-center text-center">
-    <LayersIcon className="h-8 w-8" />
-    <span className="mt-2 text-lg">Arquitectura modular</span>
-  </div>,
-
-  // Feature 15: Optimizado con IA
-  <div key="feature15" className="p-4 flex flex-col items-center text-center">
-    <CpuIcon className="h-8 w-8" />
-    <span className="mt-2 text-lg">Optimizado con IA</span>
-  </div>,
-
-  // Feature 16: Rendimiento constante
-  <div key="feature16" className="p-4 flex flex-col items-center text-center">
-    <ServerIcon className="h-8 w-8" />
-    <span className="mt-2 text-lg">Rendimiento constante</span>
-  </div>,
-
-  // Feature 17: Alta disponibilidad
-  <div key="feature17" className="p-4 flex flex-col items-center text-center">
-    <ClockIcon className="h-8 w-8" />
-    <span className="mt-2 text-lg">Alta disponibilidad</span>
-  </div>,
-
-  // Feature 18: Notificaciones inteligentes
-  <div key="feature18" className="p-4 flex flex-col items-center text-center">
-    <BellIcon className="h-8 w-8" />
-    <span className="mt-2 text-lg">Notificaciones inteligentes</span>
-  </div>,
+  </div>
 ];

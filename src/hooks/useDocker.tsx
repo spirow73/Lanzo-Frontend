@@ -1,4 +1,7 @@
+// src/hooks/useDocker.tsx
 import { useState } from "react";
+import axios, { AxiosError } from "axios";
+import { toast } from "react-toastify";
 
 const API_BASE = "/docker";
 
@@ -16,36 +19,27 @@ export interface PortMappingResponse {
  */
 export const useDeployContainer = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const deploy = async (service: string): Promise<DeploymentResponse | null> => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await fetch(`${API_BASE}/${service}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Error al levantar el contenedor");
-      }
-      const data: DeploymentResponse = await response.json();
-      return data;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error desconocido");
-      }
+      const response = await axios.post<DeploymentResponse>(`${API_BASE}/${service}`);
+      // toast.success(response.data.message); // Notifica éxito
+      return response.data;
+    } catch (err) {
+      const axiosError = err as AxiosError;
+      const errorData = axiosError.response?.data as { message?: string }; // Asumimos que data puede tener 'message'
+      const errorMessage =
+        errorData?.message || axiosError.message || "Error al levantar el contenedor.";
+      // toast.error(errorMessage);
+      console.error("Error:", errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  return { deploy, loading, error };
+  return { deploy, loading };
 };
 
 /**
@@ -53,36 +47,27 @@ export const useDeployContainer = () => {
  */
 export const useStopContainer = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const stop = async (service: string): Promise<DeploymentResponse | null> => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await fetch(`${API_BASE}/${service}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Error al detener/eliminar el contenedor");
-      }
-      const data: DeploymentResponse = await response.json();
-      return data;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error desconocido");
-      }
+      const response = await axios.delete<DeploymentResponse>(`${API_BASE}/${service}`);
+      // toast.success(response.data.message);
+      return response.data;
+    } catch (err) {
+      const axiosError = err as AxiosError;
+      const errorData = axiosError.response?.data as { message?: string }; // Asumimos que data puede tener 'message'
+      const errorMessage =
+        errorData?.message || axiosError.message || "Error al levantar el contenedor.";
+      // toast.error(errorMessage);
+      console.error("Error:", errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  return { stop, loading, error };
+  return { stop, loading };
 };
 
 /**
@@ -90,36 +75,27 @@ export const useStopContainer = () => {
  */
 export const useGetPortMapping = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const getPortMapping = async (
     service: string
   ): Promise<PortMappingResponse | null> => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await fetch(`${API_BASE}/${service}/port`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Error al obtener el mapeo de puertos");
-      }
-      const data: PortMappingResponse = await response.json();
-      return data;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error desconocido");
-      }
+      const response = await axios.get<PortMappingResponse>(`${API_BASE}/${service}/port`);
+      // toast.success("Mapeo de puertos obtenido correctamente.");
+      return response.data;
+    } catch (err) {
+      const axiosError = err as AxiosError;
+      const errorData = axiosError.response?.data as { message?: string }; // Asumimos que data puede tener 'message'
+      const errorMessage =
+        errorData?.message || axiosError.message || "Error al levantar el contenedor.";
+      // toast.error(errorMessage);
+      console.error("Error:", errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  return { getPortMapping, loading, error };
+  return { getPortMapping, loading };
 };

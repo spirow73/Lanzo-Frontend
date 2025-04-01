@@ -1,4 +1,4 @@
-// src/hooks/useTerraform.ts
+// src/hooks/useTerraform.tsx
 
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';

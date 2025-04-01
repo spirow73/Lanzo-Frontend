@@ -17,7 +17,7 @@ const GridMotion: FC<GridMotionProps> = ({
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 640);
   // Configuración según tamaño de pantalla
   const columns = isSmallScreen ? 5 : 6;
-  const rows = isSmallScreen ? 2 : 3;
+  const rows = 2;
   const totalItems = rows * columns;
 
   const defaultItems = Array.from(
@@ -40,8 +40,8 @@ const GridMotion: FC<GridMotionProps> = ({
 
     const updateMotion = (): void => {
       const maxMoveAmount = 300;
-      const baseDuration = 0.8; // Duración base para la inercia
-      const inertiaFactors = [0.6, 0.4]; // Ajustados según cantidad de filas
+      const baseDuration = 0.8; 
+      const inertiaFactors = [0.6, 0.4];
 
       rowRefs.current.forEach((row, index) => {
         if (row) {
@@ -74,15 +74,15 @@ const GridMotion: FC<GridMotionProps> = ({
   return (
     <div ref={gridRef} className="h-full w-full overflow-hidden">
       <section
-        className="w-full h-[60vh] overflow-hidden relative flex items-center justify-center"
+        className="w-full overflow-hidden relative flex items-center justify-center"
       >
         {/* Noise overlay */}
         <div className="absolute inset-0 pointer-events-none z-[4]"></div>
         <div
           className={`
             gap-4 flex-none relative
-            grid ${isSmallScreen ? "grid-rows-2 w-[200vw] h-[50vh]" : "grid-rows-3 w-[150vw] h-[80vh]"} grid-cols-1 
-            rotate-[-15deg] origin-center z-[2]
+            grid ${isSmallScreen ? "grid-rows-2 w-[200vw] h-[50vh]" : "grid-rows-2 w-[120vw] h-[50vh]"} grid-cols-1 
+            origin-center z-[2]
           `}
         >
           {Array.from({ length: rows }, (_, rowIndex) => (

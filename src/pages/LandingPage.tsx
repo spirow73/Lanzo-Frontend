@@ -18,6 +18,9 @@ const LandingPage: React.FC = () => {
 
       <main className="flex-1 relative z-10 pt-20">
         <HeroSection />
+        <h2 className="text-3xl font-bold text-white mb-8 mt-15 text-center">
+          Explora las características principales
+        </h2>
         <FeaturesSection />
         <UploadStepsSection />
       </main>
