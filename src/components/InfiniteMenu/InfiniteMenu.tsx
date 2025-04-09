@@ -760,6 +760,9 @@ class InfiniteGridMenu {
   private gl: WebGL2RenderingContext | null = null;
   private discProgram: WebGLProgram | null = null;
   private discVAO: WebGLVertexArrayObject | null = null;
+
+  private discScales: number[] = [];
+
   private discBuffers!: {
     vertices: Float32Array;
     indices: Uint16Array;
@@ -1038,6 +1041,9 @@ class InfiniteGridMenu {
       buffer: gl.createBuffer(),
     };
 
+    this.discScales = new Array(count).fill(0.25); // o el valor base que estés usando como escala
+
+
     gl.bindVertexArray(this.discVAO);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.discInstances.buffer);
     gl.bufferData(
@@ -1083,7 +1089,12 @@ class InfiniteGridMenu {
         (Math.abs(p[2]) / this.SPHERE_RADIUS) * SCALE_INTENSITY +
         (1 - SCALE_INTENSITY);
     
-      const finalScale = s * (isActive ? scale * 0.7 : scale); // Disco activo más pequeño
+      const desiredScale = s * (isActive ? scale * 0.7 : scale);
+      const previousScale = this.discScales[ndx];
+      const lerpFactor = 0.1;
+    
+      const finalScale = previousScale + (desiredScale - previousScale) * lerpFactor;
+      this.discScales[ndx] = finalScale;
     
       const matrix = mat4.create();
     
@@ -1109,7 +1120,8 @@ class InfiniteGridMenu {
       );
     
       mat4.copy(this.discInstances.matrices[ndx], matrix);
-    });    
+    });
+        
 
     // Update instance buffer
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.discInstances.buffer);

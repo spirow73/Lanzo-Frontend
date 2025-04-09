@@ -35,7 +35,7 @@ const HeroSection: React.FC = () => {
               className="font-bold"
             />
             <p className="mx-auto max-w-3xl text-white text-xl md:text-2xl leading-relaxed">
-              Simplifica la implementación y gestión de servicios en la nube de AWS y añade un toque de magia a tus interfaces, inspirado en React Bits.
+              Simplifica la implementación y gestión de servicios en la nube de AWS y añade un toque de magia con Lanzo, inspirado en React Bits y Hostinger.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-4">
