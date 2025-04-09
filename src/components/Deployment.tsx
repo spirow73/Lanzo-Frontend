@@ -34,36 +34,40 @@ const Deployment = () => {
   const { deploy } = useDeployContainer();
 
   const handleDockerDeploy = async () => {
-    if (
-      selectedProvider === "docker-local" &&
+    const isDockerProvider =
+      (selectedProvider === "docker-local" || selectedProvider === "docker-server") &&
       (selectedApplication === "web" || selectedApplication === "api") &&
       serviceMode === "standard" &&
-      selectedService
-    ) {
-      console.log("Deploying service:", selectedService);
-      const toastId = toast.loading("Desplegando servicio, por favor espere...");
-      const result = await deploy(selectedService);
-      if (result) {
-        console.log("Despliegue exitoso:", result.message);
-        toast.update(toastId, {
-          render: `Despliegue exitoso: ${result.message}`,
-          type: "success",
-          isLoading: false,
-          autoClose: 3000,
-        });
-        setCurrentStep("deploy");
-      } else {
-        console.error("Error en el despliegue del servicio");
-        toast.update(toastId, {
-          render: "Error en el despliegue del servicio",
-          type: "error",
-          isLoading: false,
-          autoClose: 3000,
-        });
-      }
+      selectedService;
+  
+    if (!isDockerProvider) {
+      console.warn("No se cumplen las condiciones para desplegar con Docker.");
+      toast.warn("No se cumplen las condiciones para desplegar con Docker.");
+      return;
+    }
+  
+    const toastId = toast.loading("Desplegando servicio, por favor espere...");
+    const ip = selectedProvider === "docker-server" ? configuration.dockerServerIp : undefined;
+  
+    const result = await deploy(selectedService, ip);
+  
+    if (result) {
+      console.log("Despliegue exitoso:", result.message);
+      toast.update(toastId, {
+        render: `Despliegue exitoso: ${result.message}`,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+      setCurrentStep("deploy");
     } else {
-      console.warn("No se cumplen las condiciones para desplegar con Docker local.");
-      toast.warn("No se cumplen las condiciones para desplegar con Docker local.");
+      console.error("Error en el despliegue del servicio");
+      toast.update(toastId, {
+        render: "Error en el despliegue del servicio",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 

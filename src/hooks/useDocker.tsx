@@ -1,7 +1,6 @@
 // src/hooks/useDocker.tsx
 import { useState } from "react";
 import axios, { AxiosError } from "axios";
-import { toast } from "react-toastify";
 
 const API_BASE = "/docker";
 
@@ -17,30 +16,36 @@ export interface PortMappingResponse {
 /**
  * Hook para levantar un contenedor de un servicio.
  */
+
 export const useDeployContainer = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
-  const deploy = async (service: string): Promise<DeploymentResponse | null> => {
+  const deploy = async (
+    service: string,
+    ip?: string
+  ): Promise<DeploymentResponse | null> => {
     setLoading(true);
     try {
-      const response = await axios.post<DeploymentResponse>(`${API_BASE}/${service}`);
-      // toast.success(response.data.message); // Notifica éxito
+      const response = await axios.post<DeploymentResponse>(
+        `${API_BASE}/${service}`,
+        ip ? { ip } : {} // cuerpo de la petición con IP si existe
+      );
       return response.data;
     } catch (err) {
       const axiosError = err as AxiosError;
-      const errorData = axiosError.response?.data as { message?: string }; // Asumimos que data puede tener 'message'
+      const errorData = axiosError.response?.data as { message?: string };
       const errorMessage =
         errorData?.message || axiosError.message || "Error al levantar el contenedor.";
-      // toast.error(errorMessage);
       console.error("Error:", errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
   };
-
+  
   return { deploy, loading };
 };
+
 
 /**
  * Hook para detener y eliminar un contenedor de un servicio.
@@ -77,25 +82,26 @@ export const useGetPortMapping = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   const getPortMapping = async (
-    service: string
+    service: string,
+    ip?: string
   ): Promise<PortMappingResponse | null> => {
     setLoading(true);
     try {
-      const response = await axios.get<PortMappingResponse>(`${API_BASE}/${service}/port`);
-      // toast.success("Mapeo de puertos obtenido correctamente.");
+      const response = await axios.get<PortMappingResponse>(
+        `${API_BASE}/${service}/port${ip ? `?ip=${encodeURIComponent(ip)}` : ''}`
+      );
       return response.data;
     } catch (err) {
       const axiosError = err as AxiosError;
-      const errorData = axiosError.response?.data as { message?: string }; // Asumimos que data puede tener 'message'
+      const errorData = axiosError.response?.data as { message?: string };
       const errorMessage =
         errorData?.message || axiosError.message || "Error al levantar el contenedor.";
-      // toast.error(errorMessage);
       console.error("Error:", errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   return { getPortMapping, loading };
 };
