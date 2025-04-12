@@ -7,6 +7,7 @@ import TierSelection from "@/components/configuration/TierSelection";
 import ServiceModeSection from "@/components/configuration/ServiceModeSection";
 import ProviderSpecificFields from "@/components/configuration/ProviderSpecificFields";
 import { useDeployContainer } from "../hooks/useDocker";
+import useTerraform from "../hooks/useTerraform";
 import { toast } from "react-toastify";
 
 const primaryColor = "#4F46E5";
@@ -31,37 +32,74 @@ const Deployment = () => {
     setStartupCommands,
   } = useDeployment();
 
-  const { deploy } = useDeployContainer();
+  // Hook para despliegue Docker
+  const { deploy: deployDocker } = useDeployContainer();
+  // Hook para despliegue Terraform (AWS)
+  const { deploy: deployTerraform } = useTerraform();
 
-  const handleDockerDeploy = async () => {
-    const isDockerProvider =
-      (selectedProvider === "docker-local" || selectedProvider === "docker-server") &&
-      (selectedApplication === "web" || selectedApplication === "api") &&
-      serviceMode === "standard" &&
-      selectedService;
-  
-    if (!isDockerProvider) {
-      console.warn("No se cumplen las condiciones para desplegar con Docker.");
-      toast.warn("No se cumplen las condiciones para desplegar con Docker.");
-      return;
-    }
-  
+  /**
+   * Función unificada para realizar el despliegue dependiendo del proveedor.
+   * - Para AWS se usará Terraform, utilizando el nombre del proyecto (configuration.name) como servicio.
+   * - Para Docker se usa el hook de Docker (se toma selectedService y, en el caso de docker-server, la IP del servidor).
+   */
+  const handleDeploy = async () => {
     const toastId = toast.loading("Desplegando servicio, por favor espere...");
-    const ip = selectedProvider === "docker-server" ? configuration.dockerServerIp : undefined;
-  
-    const result = await deploy(selectedService, ip);
-  
-    if (result) {
-      console.log("Despliegue exitoso:", result.message);
-      toast.update(toastId, {
-        render: `Despliegue exitoso: ${result.message}`,
-        type: "success",
-        isLoading: false,
-        autoClose: 3000,
-      });
-      setCurrentStep("deploy");
-    } else {
-      console.error("Error en el despliegue del servicio");
+    let result;
+
+    try {
+      if (selectedProvider === "aws") {
+        if (!selectedService) {
+          toast.warn("El nombre del proyecto es obligatorio para desplegar en AWS.");
+          return;
+        }
+    
+        // Para AWS se despliega usando Terraform
+        result = await deployTerraform(selectedService);
+      } else if (
+        selectedProvider === "docker-local" ||
+        selectedProvider === "docker-server"
+      ) {
+        if (!selectedService) {
+          toast.warn("Debe seleccionar un servicio para el despliegue Docker.");
+          return;
+        }
+    
+        const ip =
+          selectedProvider === "docker-server"
+            ? configuration.dockerServerIp
+            : undefined;
+    
+        if (selectedProvider === "docker-server" && !ip) {
+          toast.warn("Debe especificar la IP del servidor Docker.");
+          return;
+        }
+    
+        result = await deployDocker(selectedService, ip);
+      } else {
+        toast.warn("Proveedor no soportado para despliegue");
+        return;
+      }
+    
+      if (result) {
+        console.log("Despliegue exitoso:", result.message);
+        toast.update(toastId, {
+          render: `Despliegue exitoso: ${result.message}`,
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+        setCurrentStep("deploy");
+      } else {
+        console.error("Error en el despliegue del servicio");
+        toast.update(toastId, {
+          render: "Error en el despliegue del servicio",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error durante el despliegue:", error);
       toast.update(toastId, {
         render: "Error en el despliegue del servicio",
         type: "error",
@@ -69,7 +107,7 @@ const Deployment = () => {
         autoClose: 3000,
       });
     }
-  };
+  }
 
   const handleNext = () => {
     if (currentStep === "provider") {
@@ -81,10 +119,9 @@ const Deployment = () => {
     } else if (currentStep === "configuration") {
       setCurrentStep("review");
     } else if (currentStep === "review") {
+      // En step "review" se llama a handleDeploy para determinar el despliegue a usar (Docker o Terraform)
       setCurrentStep("deploy");
-      if (selectedProvider === "docker-local") {
-        handleDockerDeploy();
-      }
+      handleDeploy();
     }
   };
 
@@ -104,13 +141,18 @@ const Deployment = () => {
     if (currentStep === "provider" && !selectedProvider) return true;
     if (currentStep === "application" && !selectedApplication) return true;
     if (currentStep === "configuration") {
-      if (!configuration.name) return true;
+      if (!configuration.name) {
+        return;
+      }
       if (selectedProvider === "aws" && !configuration.region) return true;
       if (selectedApplication === "web" || selectedApplication === "api") {
         if (serviceMode === "standard" && !selectedService) return true;
         if (serviceMode === "custom" && (!customServiceFile || !startupCommands)) return true;
       }
-      if (selectedProvider === "aws" && (!configuration.awsAccessKey || !configuration.awsSecretKey))
+      if (
+        selectedProvider === "aws" &&
+        (!configuration.awsAccessKey || !configuration.awsSecretKey)
+      )
         return true;
       if (selectedProvider === "docker-server" && !configuration.dockerServerIp)
         return true;
@@ -119,7 +161,8 @@ const Deployment = () => {
   };
 
   const getSelectedProvider = () => providers.find((p) => p.id === selectedProvider);
-  const getSelectedApplication = () => applicationTypes.find((a) => a.id === selectedApplication);
+  const getSelectedApplication = () =>
+    applicationTypes.find((a) => a.id === selectedApplication);
 
   return (
     <div className="min-h-screen flex justify-center items-center p-4 bg-gray-100">
@@ -127,33 +170,43 @@ const Deployment = () => {
         {/* Progress steps */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
-            {["provider", "application", "configuration", "review", "deploy"].map((step) => (
-              <div
-                key={step}
-                className="flex flex-col items-center"
-                style={{
-                  color: getStepNumber(step) <= getStepNumber(currentStep) ? primaryColor : "#6b7280",
-                }}
-              >
+            {["provider", "application", "configuration", "review", "deploy"].map(
+              (step) => (
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+                  key={step}
+                  className="flex flex-col items-center"
                   style={{
-                    backgroundColor:
-                      getStepNumber(step) <= getStepNumber(currentStep) ? primaryColor : "#e5e7eb",
-                    color: getStepNumber(step) <= getStepNumber(currentStep) ? "#ffffff" : "#000000",
+                    color:
+                      getStepNumber(step) <= getStepNumber(currentStep)
+                        ? primaryColor
+                        : "#6b7280",
                   }}
                 >
-                  {getStepNumber(step) < getStepNumber(currentStep) ? (
-                    <Check className="h-5 w-5" />
-                  ) : (
-                    getStepNumber(step)
-                  )}
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+                    style={{
+                      backgroundColor:
+                        getStepNumber(step) <= getStepNumber(currentStep)
+                          ? primaryColor
+                          : "#e5e7eb",
+                      color:
+                        getStepNumber(step) <= getStepNumber(currentStep)
+                          ? "#ffffff"
+                          : "#000000",
+                    }}
+                  >
+                    {getStepNumber(step) < getStepNumber(currentStep) ? (
+                      <Check className="h-5 w-5" />
+                    ) : (
+                      getStepNumber(step)
+                    )}
+                  </div>
+                  <span className="text-sm hidden md:block font-medium">
+                    {step.charAt(0).toUpperCase() + step.slice(1)}
+                  </span>
                 </div>
-                <span className="text-sm hidden md:block font-medium">
-                  {step.charAt(0).toUpperCase() + step.slice(1)}
-                </span>
-              </div>
-            ))}
+              )
+            )}
           </div>
           <div className="relative mt-2">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gray-300" />
@@ -171,14 +224,20 @@ const Deployment = () => {
         <div className="border bg-white rounded shadow p-6 mb-6">
           {currentStep === "provider" && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800">Step 1: Select Cloud Provider</h2>
-              <p className="text-gray-600 mb-4">Choose the cloud provider where you want to deploy your application.</p>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Step 1: Select Cloud Provider
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Choose the cloud provider where you want to deploy your application.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {providers.map((provider) => (
                   <div
                     key={provider.id}
                     className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                      selectedProvider === provider.id ? "border-indigo-500 bg-indigo-50" : "hover:border-indigo-300"
+                      selectedProvider === provider.id
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "hover:border-indigo-300"
                     }`}
                     onClick={() => setSelectedProvider(provider.id)}
                   >
@@ -197,14 +256,20 @@ const Deployment = () => {
 
           {currentStep === "application" && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800">Step 2: Select Application Type</h2>
-              <p className="text-gray-600 mb-4">Choose the type of application or service you want to deploy.</p>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Step 2: Select Application Type
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Choose the type of application or service you want to deploy.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {applicationTypes.map((appType) => (
                   <div
                     key={appType.id}
                     className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                      selectedApplication === appType.id ? "border-indigo-500 bg-indigo-50" : "hover:border-indigo-300"
+                      selectedApplication === appType.id
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "hover:border-indigo-300"
                     }`}
                     onClick={() => setSelectedApplication(appType.id)}
                   >
@@ -223,8 +288,12 @@ const Deployment = () => {
 
           {currentStep === "configuration" && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800">Step 3: Configure Your Deployment</h2>
-              <p className="text-gray-600 mb-4">Provide the necessary configuration details for your deployment.</p>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Step 3: Configure Your Deployment
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Provide the necessary configuration details for your deployment.
+              </p>
               <div className="space-y-4">
                 <ProjectDetails />
                 <TierSelection />
@@ -248,8 +317,12 @@ const Deployment = () => {
 
           {currentStep === "review" && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800">Step 4: Review Your Deployment</h2>
-              <p className="text-gray-600 mb-4">Review your deployment configuration before proceeding.</p>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Step 4: Review Your Deployment
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Review your deployment configuration before proceeding.
+              </p>
               <div className="space-y-6">
                 <div className="border rounded-lg p-4">
                   <h3 className="font-medium text-gray-800 mb-2">Cloud Provider</h3>
@@ -276,7 +349,8 @@ const Deployment = () => {
                       <div className="space-y-2 text-gray-700">
                         <p className="font-medium">Custom Service</p>
                         <p>
-                          File: <strong>{customServiceFile?.name || "No file selected"}</strong>
+                          File:{" "}
+                          <strong>{customServiceFile?.name || "No file selected"}</strong>
                         </p>
                         <p>Commands:</p>
                         <pre className="bg-gray-100 p-2 rounded text-sm">
@@ -335,7 +409,9 @@ const Deployment = () => {
 
           {currentStep === "deploy" && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800">Step 5: Deployment Instructions</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Step 5: Deployment Instructions
+              </h2>
               <div className="flex justify-center py-4">
                 <div className="rounded-full p-3" style={{ backgroundColor: "#d1fae5" }}>
                   <Upload className="h-8 w-8" style={{ color: "#10b981" }} />
@@ -369,7 +445,8 @@ const Deployment = () => {
                     <pre className="bg-black text-white p-3 rounded-md text-sm overflow-x-auto">
                       {selectedProvider === "aws"
                         ? "$ pip install awscli"
-                        : selectedProvider === "docker-server" || selectedProvider === "docker-local"
+                        : selectedProvider === "docker-server" ||
+                          selectedProvider === "docker-local"
                         ? "$ docker --version"
                         : ""}
                     </pre>
@@ -380,18 +457,22 @@ const Deployment = () => {
                     <pre className="bg-black text-white p-3 rounded-md text-sm overflow-x-auto">
                       {selectedProvider === "aws"
                         ? "$ aws configure"
-                        : selectedProvider === "docker-server" || selectedProvider === "docker-local"
+                        : selectedProvider === "docker-server" ||
+                          selectedProvider === "docker-local"
                         ? "# Docker typically uses local daemon authentication"
                         : ""}
                     </pre>
                   </div>
 
                   <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <h4 className="font-medium text-gray-800 mb-2">3. Deploy Your Application</h4>
+                    <h4 className="font-medium text-gray-800 mb-2">
+                      3. Deploy Your Application
+                    </h4>
                     <pre className="bg-black text-white p-3 rounded-md text-sm overflow-x-auto">
                       {selectedProvider === "aws" && selectedApplication === "web"
                         ? `$ aws s3 sync ./build s3://${configuration.name} --region ${configuration.region}`
-                        : selectedProvider === "docker-server" || selectedProvider === "docker-local"
+                        : selectedProvider === "docker-server" ||
+                          selectedProvider === "docker-local"
                         ? `$ docker ${
                             selectedApplication === "web"
                               ? "app deploy"
@@ -414,7 +495,9 @@ const Deployment = () => {
             onClick={handleBack}
             disabled={currentStep === "provider"}
             className="px-4 py-2 border border-gray-300 rounded text-gray-700 disabled:opacity-50"
-            style={{ borderColor: currentStep === "provider" ? "#d1d5db" : primaryColor }}
+            style={{
+              borderColor: currentStep === "provider" ? "#d1d5db" : primaryColor,
+            }}
           >
             Back
           </button>
