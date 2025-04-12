@@ -91,7 +91,7 @@ export interface ServiceOption {
 export const webServiceOptions: ServiceOption[] = [
   {
     image: wordpressLogo,
-    service: "wordpressstack",
+    service: "wordpress",
     title: "WordPress",
     description: "Servicio de WordPress",
     deployOptions: { local: true, cloud: true },
