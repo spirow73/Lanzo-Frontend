@@ -12,11 +12,14 @@ const TerraformControls: React.FC<TerraformControlsProps> = ({ service }) => {
 
   const handleDeploy = async () => {
     const data = await deploy(service);
+    console.log(data); // data contiene la respuesta tipada de DeployResponse si todo salió bien
     // data contiene la respuesta tipada de DeployResponse si todo salió bien
   };
 
   const handleDestroy = async () => {
     const data = await destroy(service);
+    console.log(data); // data contiene la respuesta tipada de DeployResponse si todo salió bien
+
     // data contiene la respuesta tipada de DestroyResponse si todo salió bien
   };
 

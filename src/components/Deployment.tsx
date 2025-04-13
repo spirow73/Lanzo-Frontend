@@ -28,8 +28,8 @@ const Deployment = () => {
     handleConfigChange,
     setServiceMode,
     setSelectedService,
-    setCustomServiceFile,
-    setStartupCommands,
+    // setCustomServiceFile,
+    // setStartupCommands,
   } = useDeployment();
 
   // Hook para despliegue Docker

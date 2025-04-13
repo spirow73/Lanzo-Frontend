@@ -11,12 +11,6 @@ import {
   ActivityIcon,
   ShieldCheckIcon,
   DatabaseIcon,
-  GlobeIcon,
-  LayersIcon,
-  CpuIcon,
-  ServerIcon,
-  ClockIcon,
-  BellIcon,
 } from "lucide-react";
 
 export const featuresItems = [

@@ -7,7 +7,6 @@ import canvasLogo from "../assets/logos/canvas.svg";
 import ghostLogo from "../assets/logos/ghost-logo.jpg";
 import localstackLogo from "../assets/logos/localstack.png";
 import ollamaLogo from "../assets/logos/ollama.webp";
-import openwebuiLogo from "../assets/logos/openwebui.svg";
 import wordpressLogo from "../assets/logos/wordpress.svg";
 
 const primaryColor = "#4F46E5"; // Indigo 700
@@ -111,15 +110,8 @@ export const webServiceOptions: ServiceOption[] = [
     deployOptions: { local: true, cloud: true },
   },
   {
-    image: openwebuiLogo,
-    service: "openwebui",
-    title: "OpenWebUI",
-    description: "Servicio de OpenWebUI",
-    deployOptions: { local: true, cloud: true },
-  },
-  {
     image: ollamaLogo,
-    service: "ollama",
+    service: "ollamaweb",
     title: "Ollama",
     description: "Servicio de Ollama",
     deployOptions: { local: true, cloud: true },
@@ -147,13 +139,6 @@ export const apiServiceOptions: ServiceOption[] = [
     service: "express",
     title: "Express",
     description: "API service using Express.js",
-    deployOptions: { local: true, cloud: true },
-  },
-  {
-    image: openwebuiLogo,
-    service: "fastify",
-    title: "Fastify",
-    description: "API service using Fastify",
     deployOptions: { local: true, cloud: true },
   },
 ];
