@@ -9,7 +9,7 @@ const HeroSection: React.FC = () => {
 
   const handleStart = () => {
     console.log("Empezar ya clicked");
-    navigate("/deployment");
+    navigate("/projects");
   };
 
   return (

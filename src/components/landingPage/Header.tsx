@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CloudIcon } from "lucide-react";
+import LanzoLogo from "@/assets/logos/LanzoLogo.png";
 import { menuItems, navVariants } from "../../data/navItems";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +16,7 @@ const Header: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 px-6 py-4 shadow flex items-center z-50 backdrop-blur-md bg-[rgba(0,0,0,0.4)]">
       <Link className="flex items-center space-x-2" to="#">
-        <CloudIcon className="h-8 w-8 text-white" />
+        <img src={LanzoLogo} alt="Lanzo Logo" className="h-9 w-9 mr-2 rounded-full p-1 shadow" />
         <span className="text-2xl font-extrabold text-white tracking-tight">Lanzo</span>
       </Link>
       <nav className="ml-auto flex items-center space-x-6">

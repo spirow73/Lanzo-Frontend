@@ -82,6 +82,35 @@ const Deployment = () => {
     
       if (result) {
         console.log("Despliegue exitoso:", result.message);
+        // Guardar proyecto en LocalStorage usando datos del frontend
+        try {
+          const id = Date.now().toString();
+          const nombre = selectedService || configuration.name || "Proyecto sin nombre";
+          const proveedor = selectedProvider || "Desconocido";
+          const fecha = new Date().toLocaleDateString();
+          let ip: string = "-";
+          if (selectedProvider === "docker-server" && typeof configuration.dockerServerIp === "string") {
+            ip = configuration.dockerServerIp;
+          } else if (selectedProvider === "docker-local") {
+            ip = "localhost";
+          }
+          // El tipo ProjectStatus solo acepta 'desplegado' o 'en pausa'
+          const estado: "desplegado" = "desplegado";
+
+          const newProject = {
+            id,
+            nombre,
+            proveedor,
+            fecha,
+            estado,
+            ip,
+          };
+          import("../utils/localProjects").then(mod => {
+            mod.addProject(newProject);
+          });
+        } catch (e) {
+          console.error("No se pudo guardar el proyecto en LocalStorage", e);
+        }
         toast.update(toastId, {
           render: `Despliegue exitoso: ${result.message}`,
           type: "success",
@@ -165,7 +194,7 @@ const Deployment = () => {
     applicationTypes.find((a) => a.id === selectedApplication);
 
   return (
-    <div className="min-h-screen flex justify-center items-center p-4 bg-gray-100">
+    <div className="min-h-screen flex justify-center items-center p-4">
       <div className="w-full max-w-4xl">
         {/* Progress steps */}
         <div className="mb-8">
