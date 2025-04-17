@@ -10,7 +10,6 @@ import ollamaLogo from "../assets/logos/ollama.png";
 import wordpressLogo from "../assets/logos/wordpress.svg";
 import postgreLogo from "../assets/logos/postgres.png";
 import mysqlLogo from "../assets/logos/mysql.png";
-import sqliteLogo from "../assets/logos/sqlite.png";
 
 const primaryColor = "#4F46E5"; // Indigo 700
 
