@@ -6,6 +6,15 @@ const API_BASE = "/docker";
 
 export interface DeploymentResponse {
   message: string;
+  containers?: any[]; // Puedes tipar esto mejor si lo necesitas
+  project: {
+    id: string;
+    nombre: string;
+    proveedor: string;
+    fecha: string;
+    estado: string;
+    ip: string;
+  };
 }
 
 export interface PortMappingResponse {
@@ -53,17 +62,20 @@ export const useDeployContainer = () => {
 export const useStopContainer = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
-  const stop = async (service: string): Promise<DeploymentResponse | null> => {
+  const stop = async (service: string, ip?: string): Promise<DeploymentResponse | null> => {
     setLoading(true);
     try {
-      const response = await axios.delete<DeploymentResponse>(`${API_BASE}/${service}`);
+      const response = await axios.delete<DeploymentResponse>(
+        `${API_BASE}/${service}`,
+        { data: ip ? { ip } : {} }
+      );
       // toast.success(response.data.message);
       return response.data;
     } catch (err) {
       const axiosError = err as AxiosError;
       const errorData = axiosError.response?.data as { message?: string }; // Asumimos que data puede tener 'message'
       const errorMessage =
-        errorData?.message || axiosError.message || "Error al levantar el contenedor.";
+        errorData?.message || axiosError.message || "Error al detener el contenedor.";
       // toast.error(errorMessage);
       console.error("Error:", errorMessage);
       return null;
@@ -78,6 +90,64 @@ export const useStopContainer = () => {
 /**
  * Hook para obtener el mapeo de puertos de un servicio.
  */
+/**
+ * Hook para pausar un contenedor de un servicio.
+ */
+export const usePauseContainer = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const pause = async (service: string, ip?: string): Promise<DeploymentResponse | null> => {
+    setLoading(true);
+    try {
+      const response = await axios.patch<DeploymentResponse>(
+        `${API_BASE}/${service}/pause`,
+        ip ? { ip } : {}
+      );
+      return response.data;
+    } catch (err) {
+      const axiosError = err as AxiosError;
+      const errorData = axiosError.response?.data as { message?: string };
+      const errorMessage =
+        errorData?.message || axiosError.message || "Error al pausar el contenedor.";
+      console.error("Error:", errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { pause, loading };
+};
+
+/**
+ * Hook para reanudar un contenedor de un servicio.
+ */
+export const useUnpauseContainer = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const unpause = async (service: string, ip?: string): Promise<DeploymentResponse | null> => {
+    setLoading(true);
+    try {
+      const response = await axios.patch<DeploymentResponse>(
+        `${API_BASE}/${service}/unpause`,
+        ip ? { ip } : {}
+      );
+      return response.data;
+    } catch (err) {
+      const axiosError = err as AxiosError;
+      const errorData = axiosError.response?.data as { message?: string };
+      const errorMessage =
+        errorData?.message || axiosError.message || "Error al reanudar el contenedor.";
+      console.error("Error:", errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { unpause, loading };
+};
+
 export const useGetPortMapping = () => {
   const [loading, setLoading] = useState<boolean>(false);
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getProjects, saveProjects, deleteProject, LocalProject } from "../utils/localProjects";
+import { toast } from "react-toastify";
+import { getProjects, saveProjects, deleteProject, LocalProject, ProjectStatus } from "../utils/localProjects";
 
 // Utilidad para badges de estado
-const getStatusBadge = (estado: string) => {
+const getStatusBadge = (estado: ProjectStatus | string) => {
   switch (estado) {
     case "desplegado":
       return <span className="px-3 py-1 rounded text-sm font-semibold bg-green-100 text-green-700 shadow-sm border border-green-200">Online</span>;
@@ -14,25 +15,6 @@ const getStatusBadge = (estado: string) => {
       return <span className="px-3 py-1 rounded text-sm font-semibold bg-gray-100 text-gray-700 shadow-sm border border-gray-200">Desconocido</span>;
   }
 };
-
-const dummyProjects: LocalProject[] = [
-  {
-    id: "1",
-    nombre: "Mi Aplicación Web",
-    proveedor: "Localhost",
-    fecha: "16-04-2025",
-    estado: "desplegado",
-    ip: "192.168.1.10",
-  },
-  {
-    id: "2",
-    nombre: "API de Servicios",
-    proveedor: "Azure",
-    fecha: "10-04-2025",
-    estado: "en pausa",
-    ip: "10.0.0.5",
-  },
-];
 
 // Sidebar Dashboard
 import LanzoLogo from "../assets/logos/LanzoLogo.png";
@@ -55,7 +37,7 @@ const DashboardNav: React.FC<{ onNavigate: (page: string) => void; active: strin
 const NewProjectForm: React.FC<{ onAdd: (project: LocalProject) => void; onCancel: () => void }> = ({ onAdd, onCancel }) => {
   const [nombre, setNombre] = useState("");
   const [proveedor, setProveedor] = useState("Vercel");
-  const [estado, setEstado] = useState<LocalProject["estado"]>("desplegado");
+  const [estado, setEstado] = useState<ProjectStatus>("desplegado");
   const [ip, setIp] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -89,7 +71,7 @@ const NewProjectForm: React.FC<{ onAdd: (project: LocalProject) => void; onCance
       </div>
       <div className="flex flex-col gap-3">
         <label className="font-medium">Estado</label>
-        <select className="border rounded px-4 py-3 text-lg" value={estado} onChange={e => setEstado(e.target.value as LocalProject["estado"])}>
+        <select className="border rounded px-4 py-3 text-lg" value={estado} onChange={e => setEstado(e.target.value as ProjectStatus)}>
           <option value="desplegado">Desplegado</option>
           <option value="en pausa">En pausa</option>
           <option value="error">Error</option>
@@ -114,21 +96,23 @@ interface ProjectCardProps {
   onToggleStatus: (id: string) => void;
 }
 
+import { useStopContainer, usePauseContainer, useUnpauseContainer } from "../hooks/useDocker";
+
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onToggleStatus }) => (
   <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6 border border-indigo-100">
     <div>
       <h2 className="text-2xl font-bold mb-2 text-indigo-900">{project.nombre}</h2>
       <div className="text-lg text-indigo-700 mb-3">Proveedor: {project.proveedor}</div>
       <div className="text-lg text-indigo-700 mb-3">
-  IP: <a
-    href={`http://${project.ip}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{ color: "#2563eb", textDecoration: "underline", cursor: "pointer" }}
-  >
-    {project.ip}
-  </a>
-</div>
+        IP: <a
+          href={`http://${project.ip}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#2563eb", textDecoration: "underline", cursor: "pointer" }}
+        >
+          {project.ip}
+        </a>
+      </div>
       <div className="flex items-center gap-8 text-lg text-indigo-800">
         <span>Estado: {getStatusBadge(project.estado)}</span>
         <span>Último despliegue: {project.fecha}</span>
@@ -151,21 +135,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onToggleSt
   </div>
 );
 
-
 import DeploymentPage from "./Deployment";
 
 const Projects: React.FC = () => {
+  const { stop: stopContainer } = useStopContainer();
+  const { pause: pauseContainer } = usePauseContainer();
+  const { unpause: unpauseContainer } = useUnpauseContainer();
   const [projects, setProjects] = useState<LocalProject[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [page, setPage] = useState("projects");
 
   useEffect(() => {
-    let loaded = getProjects();
-    if (loaded.length === 0) {
-      saveProjects(dummyProjects);
-      loaded = dummyProjects;
-    }
-    setProjects(loaded);
+    setProjects(getProjects());
   }, []);
 
   // Handler para el botón de actualizar
@@ -173,9 +154,28 @@ const Projects: React.FC = () => {
     setProjects(getProjects());
   };
 
-  const handleDelete = (id: string) => {
-    deleteProject(id);
-    setProjects(getProjects());
+  const handleDelete = async (id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    const toastId = toast.loading("Eliminando proyecto, por favor espere...");
+    const res = await stopContainer(project.nombre);
+    if (res && res.message) {
+      toast.update(toastId, {
+        render: res.message,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+      deleteProject(id);
+      setProjects(getProjects());
+    } else {
+      toast.update(toastId, {
+        render: "Error al eliminar el contenedor.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
   };
 
   const handleAdd = (project: LocalProject) => {
@@ -185,16 +185,36 @@ const Projects: React.FC = () => {
     setShowForm(false);
   };
 
-  const handleToggleStatus = (id: string) => {
-    const updated = projects.map((proj) => {
-      if (proj.id === id) {
-        if (proj.estado === "desplegado") return { ...proj, estado: "en pausa" };
-        if (proj.estado === "en pausa") return { ...proj, estado: "desplegado" };
+  const handleToggleStatus = async (id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    if (project.estado === "desplegado") {
+      // Pausar
+      const res = await pauseContainer(project.nombre, project.ip);
+      if (res && res.message) {
+        toast.success(res.message);
+        const updated = projects.map(proj =>
+          proj.id === id ? { ...proj, estado: "en pausa" as ProjectStatus } : proj
+        );
+        setProjects(updated);
+        saveProjects(updated);
+      } else {
+        alert("Error al pausar el contenedor.");
       }
-      return proj;
-    });
-    setProjects(updated);
-    saveProjects(updated);
+    } else if (project.estado === "en pausa") {
+      // Reanudar
+      const res = await unpauseContainer(project.nombre, project.ip);
+      if (res && res.message) {
+        toast.success(res.message);
+        const updated = projects.map(proj =>
+          proj.id === id ? { ...proj, estado: "desplegado" as ProjectStatus } : proj
+        );
+        setProjects(updated);
+        saveProjects(updated);
+      } else {
+        alert("Error al reanudar el contenedor.");
+      }
+    }
   };
 
   // Dashboard dummy page
@@ -213,6 +233,20 @@ const Projects: React.FC = () => {
   }
 
   // Projects page
+  if (projects.length === 0) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 p-12">
+        <p className="text-xl mb-4 text-indigo-900">No tienes ninguna aplicación aún.</p>
+        <button
+          onClick={() => setPage("dashboard")}
+          className="px-8 py-4 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-md hover:bg-indigo-700 transition"
+        >
+          + Nueva Aplicación
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen">
       <DashboardNav onNavigate={setPage} active={page} />
@@ -228,7 +262,7 @@ const Projects: React.FC = () => {
         </div>
         <div className="flex justify-end mb-4">
           <button
-            onClick={() => setPage("dashboard")}
+            onClick={() => setShowForm(true)}
             className="px-8 py-4 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-md hover:bg-indigo-700 transition"
           >
             + Nueva Aplicación

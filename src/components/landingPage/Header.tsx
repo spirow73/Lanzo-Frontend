@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CloudIcon } from "lucide-react";
 import LanzoLogo from "@/assets/logos/LanzoLogo.png";
 import { menuItems, navVariants } from "../../data/navItems";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
 
   const handleStart = () => {
-    navigate("/deployment");
+    navigate("/projects");
   };
 
   return (

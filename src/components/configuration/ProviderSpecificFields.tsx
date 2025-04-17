@@ -4,30 +4,58 @@ import { useDeployment } from "../../contexts/useDeployment";
 const ProviderSpecificFields = () => {
   const { selectedProvider, configuration, handleConfigChange } = useDeployment();
 
-  if (selectedProvider === "aws") {
+  if (selectedProvider === "azure") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div className="space-y-2">
-          <label htmlFor="awsAccessKey" className="font-medium text-gray-700">
-            AWS Access Key
+          <label htmlFor="azureClientId" className="font-medium text-gray-700">
+            Azure Client ID
           </label>
           <input
-            id="awsAccessKey"
-            value={configuration.awsAccessKey}
-            onChange={(e) => handleConfigChange("awsAccessKey", e.target.value)}
-            placeholder="Your AWS Access Key"
+            id="azureClientId"
+            type="password"
+            value={configuration.azureClientId || ''}
+            onChange={(e) => handleConfigChange("azureClientId", e.target.value)}
+            placeholder="ARM_CLIENT_ID"
             className="border border-gray-300 rounded p-2 w-full"
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="awsSecretKey" className="font-medium text-gray-700">
-            AWS Secret Key
+          <label htmlFor="azureClientSecret" className="font-medium text-gray-700">
+            Azure Client Secret
           </label>
           <input
-            id="awsSecretKey"
-            value={configuration.awsSecretKey}
-            onChange={(e) => handleConfigChange("awsSecretKey", e.target.value)}
-            placeholder="Your AWS Secret Key"
+            id="azureClientSecret"
+            type="password"
+            value={configuration.azureClientSecret || ''}
+            onChange={(e) => handleConfigChange("azureClientSecret", e.target.value)}
+            placeholder="ARM_CLIENT_SECRET"
+            className="border border-gray-300 rounded p-2 w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="azureSubscriptionId" className="font-medium text-gray-700">
+            Azure Subscription ID
+          </label>
+          <input
+            id="azureSubscriptionId"
+            type="password"
+            value={configuration.azureSubscriptionId || ''}
+            onChange={(e) => handleConfigChange("azureSubscriptionId", e.target.value)}
+            placeholder="ARM_SUBSCRIPTION_ID"
+            className="border border-gray-300 rounded p-2 w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="azureTenantId" className="font-medium text-gray-700">
+            Azure Tenant ID
+          </label>
+          <input
+            id="azureTenantId"
+            type="password"
+            value={configuration.azureTenantId || ''}
+            onChange={(e) => handleConfigChange("azureTenantId", e.target.value)}
+            placeholder="ARM_TENANT_ID"
             className="border border-gray-300 rounded p-2 w-full"
           />
         </div>

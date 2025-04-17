@@ -18,7 +18,7 @@ const ProjectDetails = () => {
           className="border border-gray-300 rounded p-2 w-full"
         />
       </div>
-      {selectedProvider === "aws" && (
+      {selectedProvider === "azure" && (
         <div className="space-y-2">
           <label htmlFor="region" className="font-medium text-gray-700">
             Region
@@ -29,7 +29,7 @@ const ProjectDetails = () => {
             onChange={(e) => handleConfigChange("region", e.target.value)}
             className="border border-gray-300 rounded p-2 w-full"
           >
-            <option value="">Select a region</option>
+            <option value="">Selecciona una región</option>
             <option value="us-east">US East (N. Virginia)</option>
             <option value="us-west">US West (Oregon)</option>
             <option value="eu-west">EU West (Ireland)</option>

@@ -1,7 +1,7 @@
 import { createContext } from "react";
 
 // Tipos
-export type Step = "provider" | "application" | "configuration" | "review" | "deploy";
+export type Step = "provider" | "application" | "configuration" | "review" | "deploy" | "github" | "url" | "commands" | "secrets";
 export type ServiceMode = "standard" | "custom";
 
 export interface Configuration {
@@ -9,9 +9,11 @@ export interface Configuration {
   region: string;
   tier: string;
   description: string;
-  awsAccessKey: string;
-  awsSecretKey: string;
   dockerServerIp: string;
+  azureClientId: string;
+  azureClientSecret: string;
+  azureSubscriptionId: string;
+  azureTenantId: string;
 }
 
 export interface DeploymentContextProps {
@@ -29,6 +31,8 @@ export interface DeploymentContextProps {
   setCustomServiceFile: (file: File | null) => void;
   startupCommands: string;
   setStartupCommands: (cmd: string) => void;
+  customServiceUrl: string;
+  setCustomServiceUrl: (url: string) => void;
   configuration: Configuration;
   setConfiguration: React.Dispatch<React.SetStateAction<Configuration>>;
   handleConfigChange: (field: keyof Configuration, value: string) => void;

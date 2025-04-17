@@ -21,9 +21,9 @@ export interface Provider {
 
 export const providers: Provider[] = [
   {
-    id: "aws",
-    name: "Amazon Web Services",
-    description: "Comprehensive cloud platform with a wide range of services",
+    id: "azure",
+    name: "Microsoft Azure",
+    description: "Cloud platform by Microsoft for building, deploying, and managing applications.",
     icon: <Cloud className="h-8 w-8" style={{ color: primaryColor }} />,
   },
   {

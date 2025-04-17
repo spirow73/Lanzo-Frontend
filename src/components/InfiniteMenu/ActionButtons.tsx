@@ -3,6 +3,15 @@ import { toast } from "react-toastify";
 
 interface DeploymentResponse {
   message: string;
+  containers?: any[]; // Puedes tipar esto mejor si lo necesitas
+  project: {
+    id: string;
+    nombre: string;
+    proveedor: string;
+    fecha: string;
+    estado: string;
+    ip: string;
+  };
 }
 
 interface PortMappingResponse {

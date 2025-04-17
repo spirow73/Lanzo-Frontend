@@ -9,10 +9,11 @@ const ServiceModeSection = () => {
     selectedApplication,
     selectedService,
     setSelectedService,
-    customServiceFile,
-    setCustomServiceFile,
+    customServiceUrl,
+    setCustomServiceUrl,
     startupCommands,
     setStartupCommands,
+    selectedProvider,
   } = useDeployment();
 
   // Definir las opciones de servicio según el tipo de aplicación seleccionado
@@ -22,11 +23,6 @@ const ServiceModeSection = () => {
       : selectedApplication === "api"
       ? apiServiceOptions
       : [];
-
-  const handleClearCustom = () => {
-    setStartupCommands("");
-    setCustomServiceFile(null);
-  };
 
   return (
     <div className="space-y-4">
@@ -46,18 +42,19 @@ const ServiceModeSection = () => {
             <p className="text-sm text-gray-500">Use pre-built templates</p>
           </div>
         </label>
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className={`flex items-center gap-2 ${selectedProvider === "azure" ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
           <input
             type="radio"
             name="serviceMode"
             className="h-4 w-4"
             value="custom"
             checked={serviceMode === "custom"}
-            onChange={() => setServiceMode("custom")}
+            onChange={() => selectedProvider === "azure" && setServiceMode("custom")}
+            disabled={selectedProvider !== "azure"}
           />
           <div>
             <span className="font-medium text-gray-700">Custom</span>
-            <p className="text-sm text-gray-500">Upload your own service</p>
+            <p className="text-sm text-gray-500">Use your GitHub repository (Azure only)</p>
           </div>
         </label>
       </div>
@@ -85,37 +82,21 @@ const ServiceModeSection = () => {
       {serviceMode === "custom" && (
         <div className="space-y-6 mt-4">
           <div className="border rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-2">Step 1: Create a ZIP file with your service</h4>
-            <p className="text-sm text-gray-600">
-              Package your application files into a ZIP archive that includes all the necessary assets.
+            <h4 className="font-medium text-gray-800 mb-2">Step 1: Provide GitHub repository URL</h4>
+            <p className="text-sm text-gray-600 mb-2">
+              Enter the URL of your GitHub repository containing your service code.
             </p>
+            <input
+              type="text"
+              value={customServiceUrl}
+              onChange={(e) => setCustomServiceUrl(e.target.value)}
+              placeholder="https://github.com/user/repo"
+              className="border border-gray-300 rounded p-2 w-full text-sm"
+            />
           </div>
 
           <div className="border rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-2">Step 2: Upload the ZIP file</h4>
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              <button
-                type="button"
-                className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
-                onClick={() => document.getElementById("customFileInput")?.click()}
-              >
-                Browse Files
-              </button>
-              <span className="text-sm text-gray-600">
-                {customServiceFile ? customServiceFile.name : "No file selected"}
-              </span>
-              <input
-                id="customFileInput"
-                type="file"
-                accept=".zip,.tar.gz"
-                className="hidden"
-                onChange={(e) => setCustomServiceFile(e.target.files?.[0] ?? null)}
-              />
-            </div>
-          </div>
-
-          <div className="border rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-2">Step 3: Add startup commands</h4>
+            <h4 className="font-medium text-gray-800 mb-2">Step 2: Add startup commands</h4>
             <p className="text-sm text-gray-600 mb-2">
               Specify the commands needed to start your application. These commands will be executed after deployment.
             </p>
@@ -129,7 +110,7 @@ const ServiceModeSection = () => {
               <button
                 type="button"
                 className="mr-2 px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
-                onClick={handleClearCustom}
+                onClick={() => { setStartupCommands(""); setCustomServiceUrl(""); }}
               >
                 Clear
               </button>

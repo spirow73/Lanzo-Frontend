@@ -47,9 +47,9 @@ const Deployment = () => {
     let result;
 
     try {
-      if (selectedProvider === "aws") {
+      if (selectedProvider === "azure") {
         if (!selectedService) {
-          toast.warn("El nombre del proyecto es obligatorio para desplegar en AWS.");
+          toast.warn("El nombre del proyecto es obligatorio para desplegar en Azure.");
           return;
         }
     
@@ -88,12 +88,7 @@ const Deployment = () => {
           const nombre = selectedService || configuration.name || "Proyecto sin nombre";
           const proveedor = selectedProvider || "Desconocido";
           const fecha = new Date().toLocaleDateString();
-          let ip: string = "-";
-          if (selectedProvider === "docker-server" && typeof configuration.dockerServerIp === "string") {
-            ip = configuration.dockerServerIp;
-          } else if (selectedProvider === "docker-local") {
-            ip = "localhost";
-          }
+          const ip: string = (result && "project" in result && result.project?.ip) ? result.project.ip : "-";
           // El tipo ProjectStatus solo acepta 'desplegado' o 'en pausa'
           const estado: "desplegado" = "desplegado";
 

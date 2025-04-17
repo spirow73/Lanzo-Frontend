@@ -9,15 +9,18 @@ export const DeploymentProvider = ({ children }: { children: ReactNode }) => {
   const [serviceMode, setServiceMode] = useState<ServiceMode>("standard");
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [customServiceFile, setCustomServiceFile] = useState<File | null>(null);
+  const [customServiceUrl, setCustomServiceUrl] = useState<string>("");
   const [startupCommands, setStartupCommands] = useState<string>("");
   const [configuration, setConfiguration] = useState<Configuration>({
     name: "",
     region: "",
     tier: "standard",
     description: "",
-    awsAccessKey: "",
-    awsSecretKey: "",
     dockerServerIp: "",
+    azureClientId: "",
+    azureClientSecret: "",
+    azureSubscriptionId: "",
+    azureTenantId: "",
   });
 
   const handleConfigChange = (field: keyof Configuration, value: string) => {
@@ -39,6 +42,8 @@ export const DeploymentProvider = ({ children }: { children: ReactNode }) => {
         setSelectedService,
         customServiceFile,
         setCustomServiceFile,
+        customServiceUrl,
+        setCustomServiceUrl,
         startupCommands,
         setStartupCommands,
         configuration,
