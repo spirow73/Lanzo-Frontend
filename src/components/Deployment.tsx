@@ -1,10 +1,11 @@
 "use client";
 import { useDeployment } from "../contexts/useDeployment";
 import { providers, applicationTypes } from "../data/providers";
-import { Check, Upload } from "lucide-react";
+import { Check } from "lucide-react";
 import ProjectDetails from "@/components/configuration/ProjectDetails";
-import TierSelection from "@/components/configuration/TierSelection";
+// import TierSelection from "@/components/configuration/TierSelection";
 import ServiceModeSection from "@/components/configuration/ServiceModeSection";
+import ServiceModeSectionDocker from "@/components/configuration/ServiceModeSectionDocker";
 import ProviderSpecificFields from "@/components/configuration/ProviderSpecificFields";
 import { useDeployContainer } from "../hooks/useDocker";
 import useTerraform from "../hooks/useTerraform";
@@ -24,37 +25,46 @@ const Deployment = () => {
     serviceMode,
     selectedService,
     customServiceFile,
+    customServiceUrl,
     startupCommands,
     handleConfigChange,
     setServiceMode,
     setSelectedService,
-    // setCustomServiceFile,
-    // setStartupCommands,
   } = useDeployment();
 
   // Hook para despliegue Docker
   const { deploy: deployDocker } = useDeployContainer();
-  // Hook para despliegue Terraform (AWS)
+  // Hook para despliegue Terraform (Azure)
   const { deploy: deployTerraform } = useTerraform();
 
   /**
    * Función unificada para realizar el despliegue dependiendo del proveedor.
-   * - Para AWS se usará Terraform, utilizando el nombre del proyecto (configuration.name) como servicio.
+   * - Para Azure se usará Terraform, utilizando el nombre del proyecto (configuration.name) como servicio.
    * - Para Docker se usa el hook de Docker (se toma selectedService y, en el caso de docker-server, la IP del servidor).
    */
   const handleDeploy = async () => {
+    console.log('handleDeploy invoked', { selectedProvider, configuration, serviceMode, selectedService, customServiceUrl, startupCommands });
     const toastId = toast.loading("Desplegando servicio, por favor espere...");
     let result;
 
     try {
       if (selectedProvider === "azure") {
-        if (!selectedService) {
+        if (!configuration.name) {
           toast.warn("El nombre del proyecto es obligatorio para desplegar en Azure.");
           return;
         }
     
-        // Para AWS se despliega usando Terraform
-        result = await deployTerraform(selectedService);
+        // Deploy to Azure via Terraform with required body
+        const azureBody = {
+          azure_client_id: configuration.azureClientId,
+          azure_client_secret: configuration.azureClientSecret,
+          azure_subscription_id: configuration.azureSubscriptionId,
+          azure_tenant_id: configuration.azureTenantId,
+          command: startupCommands,
+          user_github_url: customServiceUrl,
+        };
+        console.log('Azure deploy body:', azureBody);
+        result = await deployTerraform("customvm", azureBody);
       } else if (
         selectedProvider === "docker-local" ||
         selectedProvider === "docker-server"
@@ -99,6 +109,11 @@ const Deployment = () => {
             fecha,
             estado,
             ip,
+            // Guardar credenciales Azure si aplica
+            azure_client_id: configuration.azureClientId || "",
+            azure_client_secret: configuration.azureClientSecret || "",
+            azure_subscription_id: configuration.azureSubscriptionId || "",
+            azure_tenant_id: configuration.azureTenantId || "",
           };
           import("../utils/localProjects").then(mod => {
             mod.addProject(newProject);
@@ -165,19 +180,16 @@ const Deployment = () => {
     if (currentStep === "provider" && !selectedProvider) return true;
     if (currentStep === "application" && !selectedApplication) return true;
     if (currentStep === "configuration") {
-      if (!configuration.name) {
-        return;
-      }
-      if (selectedProvider === "aws" && !configuration.region) return true;
+      if (!configuration.name) return true;
+      
       if (selectedApplication === "web" || selectedApplication === "api") {
-        if (serviceMode === "standard" && !selectedService) return true;
-        if (serviceMode === "custom" && (!customServiceFile || !startupCommands)) return true;
+        if (
+          serviceMode === "standard" && !selectedService && !(customServiceUrl && startupCommands)
+        ) return true;
+        if (
+          serviceMode === "custom" && (!customServiceUrl || !startupCommands) && !selectedService
+        ) return true;
       }
-      if (
-        selectedProvider === "aws" &&
-        (!configuration.awsAccessKey || !configuration.awsSecretKey)
-      )
-        return true;
       if (selectedProvider === "docker-server" && !configuration.dockerServerIp)
         return true;
     }
@@ -320,8 +332,12 @@ const Deployment = () => {
               </p>
               <div className="space-y-4">
                 <ProjectDetails />
-                <TierSelection />
-                <ServiceModeSection />
+                {/* <TierSelection /> */}
+                {selectedProvider === "azure" ? (
+                  <ServiceModeSection />
+                ) : selectedProvider === "docker-local" || selectedProvider === "docker-server" ? (
+                  <ServiceModeSectionDocker />
+                ) : null}
                 <ProviderSpecificFields />
                 <div className="space-y-2">
                   <label htmlFor="description" className="font-medium text-gray-700">
@@ -391,7 +407,7 @@ const Deployment = () => {
                       <p className="text-sm text-gray-600">Project Name</p>
                       <p>{configuration.name}</p>
                     </div>
-                    {selectedProvider === "aws" && (
+                    {selectedProvider === "azure" && (
                       <div>
                         <p className="text-sm text-gray-600">Region</p>
                         <p>{configuration.region}</p>
@@ -401,18 +417,6 @@ const Deployment = () => {
                       <p className="text-sm text-gray-600">Tier</p>
                       <p className="capitalize">{configuration.tier}</p>
                     </div>
-                    {selectedProvider === "aws" && (
-                      <>
-                        <div>
-                          <p className="text-sm text-gray-600">AWS Access Key</p>
-                          <p>{configuration.awsAccessKey}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">AWS Secret Key</p>
-                          <p>{configuration.awsSecretKey}</p>
-                        </div>
-                      </>
-                    )}
                     {selectedProvider === "docker-server" && (
                       <div className="md:col-span-2">
                         <p className="text-sm text-gray-600">Docker Server IP</p>
@@ -433,82 +437,17 @@ const Deployment = () => {
 
           {currentStep === "deploy" && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Step 5: Deployment Instructions
-              </h2>
-              <div className="flex justify-center py-4">
-                <div className="rounded-full p-3" style={{ backgroundColor: "#d1fae5" }}>
-                  <Upload className="h-8 w-8" style={{ color: "#10b981" }} />
+              {currentStep === "deploy" && (
+                <div className="space-y-6 text-center">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    ¡Despliegue en proceso!
+                  </h2>
+                  <p className="text-gray-700 text-lg">
+                    Revisa tus aplicaciones para acceder!<br />
+                    Los servicios suelen tardar unos minutos antes de estar activos.
+                  </p>
                 </div>
-              </div>
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-medium text-gray-800">Ready to Deploy!</h3>
-                <p className="text-gray-600">
-                  Follow the instructions below to complete your deployment.
-                </p>
-              </div>
-              <div>
-                <div className="flex mb-4">
-                  <button
-                    onClick={() => setCurrentStep("deploy")}
-                    className="flex-1 py-2 border-b-2 font-medium"
-                    style={{ borderColor: primaryColor, color: primaryColor }}
-                  >
-                    Command Line
-                  </button>
-                  <button
-                    onClick={() => setCurrentStep("deploy")}
-                    className="flex-1 py-2 border-b-2 font-medium text-gray-600"
-                  >
-                    Web Console
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <h4 className="font-medium text-gray-800 mb-2">1. Install the CLI</h4>
-                    <pre className="bg-black text-white p-3 rounded-md text-sm overflow-x-auto">
-                      {selectedProvider === "aws"
-                        ? "$ pip install awscli"
-                        : selectedProvider === "docker-server" ||
-                          selectedProvider === "docker-local"
-                        ? "$ docker --version"
-                        : ""}
-                    </pre>
-                  </div>
-
-                  <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <h4 className="font-medium text-gray-800 mb-2">2. Authenticate</h4>
-                    <pre className="bg-black text-white p-3 rounded-md text-sm overflow-x-auto">
-                      {selectedProvider === "aws"
-                        ? "$ aws configure"
-                        : selectedProvider === "docker-server" ||
-                          selectedProvider === "docker-local"
-                        ? "# Docker typically uses local daemon authentication"
-                        : ""}
-                    </pre>
-                  </div>
-
-                  <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <h4 className="font-medium text-gray-800 mb-2">
-                      3. Deploy Your Application
-                    </h4>
-                    <pre className="bg-black text-white p-3 rounded-md text-sm overflow-x-auto">
-                      {selectedProvider === "aws" && selectedApplication === "web"
-                        ? `$ aws s3 sync ./build s3://${configuration.name} --region ${configuration.region}`
-                        : selectedProvider === "docker-server" ||
-                          selectedProvider === "docker-local"
-                        ? `$ docker ${
-                            selectedApplication === "web"
-                              ? "app deploy"
-                              : selectedApplication === "api"
-                              ? "functions deploy"
-                              : ""
-                          } ${configuration.name} --region=${configuration.region}`
-                        : ""}
-                    </pre>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>

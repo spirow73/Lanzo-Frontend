@@ -20,7 +20,7 @@ const getStatusBadge = (estado: ProjectStatus | string) => {
 import LanzoLogo from "../assets/logos/LanzoLogo.png";
 
 const DashboardNav: React.FC<{ onNavigate: (page: string) => void; active: string }> = ({ onNavigate, active }) => (
-  <aside className="bg-gradient-to-b from-indigo-700 to-blue-800 h-screen w-64 flex flex-col justify-between shadow-lg">
+  <aside className="bg-blue-800 min-h-screen w-64 flex flex-col justify-between shadow-lg">
     <div>
       <div className="flex items-center justify-center h-16 px-6 border-b border-indigo-600">
         <img src={LanzoLogo} alt="Lanzo Logo" className="h-8 w-8 mr-2 brightness-200" />
@@ -33,62 +33,6 @@ const DashboardNav: React.FC<{ onNavigate: (page: string) => void; active: strin
   </aside>
 );
 
-// Formulario para nueva aplicación
-const NewProjectForm: React.FC<{ onAdd: (project: LocalProject) => void; onCancel: () => void }> = ({ onAdd, onCancel }) => {
-  const [nombre, setNombre] = useState("");
-  const [proveedor, setProveedor] = useState("Vercel");
-  const [estado, setEstado] = useState<ProjectStatus>("desplegado");
-  const [ip, setIp] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nombre.trim() || !ip.trim()) return;
-    onAdd({
-      id: Date.now().toString(),
-      nombre,
-      proveedor,
-      fecha: "Ahora",
-      estado,
-      ip,
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-10 flex flex-col gap-6 mb-8 max-w-2xl mx-auto border border-indigo-200">
-      <h2 className="text-2xl font-bold text-indigo-900">Nueva Aplicación</h2>
-      <div className="flex flex-col gap-3">
-        <label className="font-medium">Nombre</label>
-        <input className="border rounded px-4 py-3 text-lg" value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Mi Aplicación" required />
-      </div>
-      <div className="flex flex-col gap-3">
-        <label className="font-medium">Proveedor</label>
-        <select className="border rounded px-4 py-3 text-lg" value={proveedor} onChange={e => setProveedor(e.target.value)}>
-          <option value="Vercel">Vercel</option>
-          <option value="Netlify">Netlify</option>
-          <option value="Railway">Railway</option>
-          <option value="Render">Render</option>
-        </select>
-      </div>
-      <div className="flex flex-col gap-3">
-        <label className="font-medium">Estado</label>
-        <select className="border rounded px-4 py-3 text-lg" value={estado} onChange={e => setEstado(e.target.value as ProjectStatus)}>
-          <option value="desplegado">Desplegado</option>
-          <option value="en pausa">En pausa</option>
-          <option value="error">Error</option>
-        </select>
-      </div>
-      <div className="flex flex-col gap-3">
-        <label className="font-medium">Dirección IP</label>
-        <input className="border rounded px-4 py-3 text-lg" value={ip} onChange={e => setIp(e.target.value)} placeholder="192.168.1.10" required />
-      </div>
-      <div className="flex gap-4 justify-end">
-        <button type="button" onClick={onCancel} className="px-6 py-3 rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 text-indigo-700 font-semibold transition">Cancelar</button>
-        <button type="submit" className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow transition">Añadir</button>
-      </div>
-    </form>
-  );
-};
-
 // Tarjeta de proyecto
 interface ProjectCardProps {
   project: LocalProject;
@@ -97,6 +41,7 @@ interface ProjectCardProps {
 }
 
 import { useStopContainer, usePauseContainer, useUnpauseContainer } from "../hooks/useDocker";
+import useTerraform from "../hooks/useTerraform";
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onToggleStatus }) => (
   <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6 border border-indigo-100">
@@ -141,9 +86,17 @@ const Projects: React.FC = () => {
   const { stop: stopContainer } = useStopContainer();
   const { pause: pauseContainer } = usePauseContainer();
   const { unpause: unpauseContainer } = useUnpauseContainer();
+  const { destroy } = useTerraform();
   const [projects, setProjects] = useState<LocalProject[]>([]);
-  const [showForm, setShowForm] = useState(false);
   const [page, setPage] = useState("projects");
+  const [showAzureModal, setShowAzureModal] = useState(false);
+  const [azureModalProject, setAzureModalProject] = useState<LocalProject | null>(null);
+  const [azureCreds, setAzureCreds] = useState({
+    azure_client_id: "",
+    azure_client_secret: "",
+    azure_subscription_id: "",
+    azure_tenant_id: "",
+  });
 
   useEffect(() => {
     setProjects(getProjects());
@@ -157,32 +110,38 @@ const Projects: React.FC = () => {
   const handleDelete = async (id: string) => {
     const project = projects.find(p => p.id === id);
     if (!project) return;
-    const toastId = toast.loading("Eliminando proyecto, por favor espere...");
-    const res = await stopContainer(project.nombre);
-    if (res && res.message) {
-      toast.update(toastId, {
-        render: res.message,
-        type: "success",
-        isLoading: false,
-        autoClose: 3000,
+    if (project.proveedor.toLowerCase() === "azure") {
+      setAzureModalProject(project);
+      setAzureCreds({
+        azure_client_id: project.azure_client_id || "",
+        azure_client_secret: project.azure_client_secret || "",
+        azure_subscription_id: project.azure_subscription_id || "",
+        azure_tenant_id: project.azure_tenant_id || "",
       });
-      deleteProject(id);
-      setProjects(getProjects());
+      setShowAzureModal(true);
+      return;
     } else {
-      toast.update(toastId, {
-        render: "Error al eliminar el contenedor.",
-        type: "error",
-        isLoading: false,
-        autoClose: 3000,
-      });
+      // Lógica de borrado para Docker/local
+      const toastId = toast.loading("Eliminando contenedor...");
+      const res = await stopContainer(project.nombre);
+      if (res && res.message) {
+        toast.update(toastId, {
+          render: res.message,
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+        deleteProject(id);
+        setProjects(getProjects());
+      } else {
+        toast.update(toastId, {
+          render: "Error al eliminar el contenedor.",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
     }
-  };
-
-  const handleAdd = (project: LocalProject) => {
-    const updated = [...projects, project];
-    setProjects(updated);
-    saveProjects(updated);
-    setShowForm(false);
   };
 
   const handleToggleStatus = async (id: string) => {
@@ -190,7 +149,9 @@ const Projects: React.FC = () => {
     if (!project) return;
     if (project.estado === "desplegado") {
       // Pausar
-      const res = await pauseContainer(project.nombre, project.ip);
+      const dockerHost = project.ip?.split(':')[0];
+const isLocal = !dockerHost || dockerHost === "localhost" || dockerHost === "127.0.0.1";
+const res = await pauseContainer(project.nombre, isLocal ? undefined : dockerHost);
       if (res && res.message) {
         toast.success(res.message);
         const updated = projects.map(proj =>
@@ -203,7 +164,9 @@ const Projects: React.FC = () => {
       }
     } else if (project.estado === "en pausa") {
       // Reanudar
-      const res = await unpauseContainer(project.nombre, project.ip);
+      const dockerHost = project.ip?.split(':')[0];
+const isLocal = !dockerHost || dockerHost === "localhost" || dockerHost === "127.0.0.1";
+const res = await unpauseContainer(project.nombre, isLocal ? undefined : dockerHost);
       if (res && res.message) {
         toast.success(res.message);
         const updated = projects.map(proj =>
@@ -215,6 +178,41 @@ const Projects: React.FC = () => {
         alert("Error al reanudar el contenedor.");
       }
     }
+  };
+
+  // Maneja la confirmación de borrado en Azure con credenciales
+  const handleConfirmAzureDelete = async () => {
+    if (!azureModalProject) return;
+    const toastId = toast.loading("Eliminando proyecto, por favor espere...");
+    try {
+      const res = await destroy("customvm", azureCreds);
+      if (res && res.message) {
+        toast.update(toastId, {
+          render: res.message,
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+        deleteProject(azureModalProject.id);
+        setProjects(getProjects());
+      } else {
+        toast.update(toastId, {
+          render: "Error al eliminar recursos en Azure.",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
+    } catch (err) {
+      toast.update(toastId, {
+        render: "Error al eliminar recursos en Azure.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
+    setShowAzureModal(false);
+    setAzureModalProject(null);
   };
 
   // Dashboard dummy page
@@ -237,45 +235,111 @@ const Projects: React.FC = () => {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 p-12">
         <p className="text-xl mb-4 text-indigo-900">No tienes ninguna aplicación aún.</p>
-        <button
-          onClick={() => setPage("dashboard")}
-          className="px-8 py-4 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-md hover:bg-indigo-700 transition"
-        >
-          + Nueva Aplicación
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-screen">
-      <DashboardNav onNavigate={setPage} active={page} />
-      <main className="flex-1 bg-gradient-to-br from-indigo-50 to-blue-50 p-12">
-        <div className="flex items-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-900 mr-4">Aplicaciones</h1>
+        <div className="flex gap-4">
           <button
             onClick={handleRefresh}
-            className="px-6 py-2 rounded-lg bg-blue-500 text-white font-semibold shadow hover:bg-blue-600 transition"
+            className="px-8 py-4 rounded-xl bg-blue-500 text-white font-bold text-lg shadow-md hover:bg-blue-600 transition"
           >
             Actualizar
           </button>
-        </div>
-        <div className="flex justify-end mb-4">
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => setPage("dashboard")}
             className="px-8 py-4 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-md hover:bg-indigo-700 transition"
           >
             + Nueva Aplicación
           </button>
         </div>
-        {showForm && <NewProjectForm onAdd={handleAdd} onCancel={() => setShowForm(false)} />}
-        <div className="grid gap-8">
-          {projects.map((p) => (
-            <ProjectCard key={p.id} project={p} onDelete={handleDelete} onToggleStatus={handleToggleStatus} />
-          ))}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex min-h-screen">
+        <DashboardNav onNavigate={setPage} active={page} />
+        <main className="flex-1 bg-gradient-to-br from-indigo-50 to-blue-50 p-12">
+          <div className="flex items-center mb-8">
+            <h1 className="text-3xl font-bold text-indigo-900 mr-4">Aplicaciones</h1>
+            <button
+              onClick={handleRefresh}
+              className="px-6 py-2 rounded-lg bg-blue-500 text-white font-semibold shadow hover:bg-blue-600 transition"
+            >
+              Actualizar
+            </button>
+          </div>
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => setPage("dashboard")}
+              className="px-8 py-4 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-md hover:bg-indigo-700 transition"
+            >
+              + Nueva Aplicación
+            </button>
+          </div>
+          <div className="grid gap-8">
+            {projects.map((p) => (
+              <ProjectCard key={p.id} project={p} onDelete={handleDelete} onToggleStatus={handleToggleStatus} />
+            ))}
+          </div>
+        </main>
+      </div>
+      {showAzureModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Credenciales Azure</h2>
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700">Client ID</label>
+              <input
+                type="password"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                value={azureCreds.azure_client_id}
+                onChange={(e) => setAzureCreds({ ...azureCreds, azure_client_id: e.target.value })}
+              />
+            </div>
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700">Client Secret</label>
+              <input
+                type="password"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                value={azureCreds.azure_client_secret}
+                onChange={(e) => setAzureCreds({ ...azureCreds, azure_client_secret: e.target.value })}
+              />
+            </div>
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700">Subscription ID</label>
+              <input
+                type="password"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                value={azureCreds.azure_subscription_id}
+                onChange={(e) => setAzureCreds({ ...azureCreds, azure_subscription_id: e.target.value })}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Tenant ID</label>
+              <input
+                type="password"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                value={azureCreds.azure_tenant_id}
+                onChange={(e) => setAzureCreds({ ...azureCreds, azure_tenant_id: e.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => { setShowAzureModal(false); setAzureModalProject(null); }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmAzureDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      )}
+    </>
   );
 };
 

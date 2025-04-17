@@ -8,6 +8,11 @@ export interface LocalProject {
   fecha: string;
   estado: ProjectStatus;
   ip: string;
+  // Campos opcionales para Azure
+  azure_client_id?: string;
+  azure_client_secret?: string;
+  azure_subscription_id?: string;
+  azure_tenant_id?: string;
 }
 
 const STORAGE_KEY = 'lanzo_projects';

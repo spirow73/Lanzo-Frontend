@@ -6,8 +6,11 @@ import awsLogo from "../assets/logos/aws.png";
 import canvasLogo from "../assets/logos/canvas.svg";
 import ghostLogo from "../assets/logos/ghost-logo.jpg";
 import localstackLogo from "../assets/logos/localstack.png";
-import ollamaLogo from "../assets/logos/ollama.webp";
+import ollamaLogo from "../assets/logos/ollama.png";
 import wordpressLogo from "../assets/logos/wordpress.svg";
+import postgreLogo from "../assets/logos/postgres.png";
+import mysqlLogo from "../assets/logos/mysql.png";
+import sqliteLogo from "../assets/logos/sqlite.png";
 
 const primaryColor = "#4F46E5"; // Indigo 700
 
@@ -85,6 +88,7 @@ export interface ServiceOption {
     local: boolean;
     cloud: boolean;
   };
+  providers: string[];
 }
 
 export const webServiceOptions: ServiceOption[] = [
@@ -94,6 +98,7 @@ export const webServiceOptions: ServiceOption[] = [
     title: "WordPress",
     description: "Servicio de WordPress",
     deployOptions: { local: true, cloud: true },
+    providers: ["azure", "docker-server", "docker-local"],
   },
   {
     image: localstackLogo,
@@ -101,6 +106,7 @@ export const webServiceOptions: ServiceOption[] = [
     title: "LocalStack",
     description: "Servicio de LocalStack",
     deployOptions: { local: true, cloud: true },
+    providers: ["azure", "docker-server", "docker-local"],
   },
   {
     image: canvasLogo,
@@ -108,6 +114,7 @@ export const webServiceOptions: ServiceOption[] = [
     title: "Canvas",
     description: "Servicio de Canvas",
     deployOptions: { local: true, cloud: true },
+    providers: ["azure", "docker-server", "docker-local"],
   },
   {
     image: ollamaLogo,
@@ -115,13 +122,7 @@ export const webServiceOptions: ServiceOption[] = [
     title: "Ollama",
     description: "Servicio de Ollama",
     deployOptions: { local: true, cloud: true },
-  },
-  {
-    image: awsLogo,
-    service: "aws",
-    title: "AWS",
-    description: "Servicio de AWS",
-    deployOptions: { local: true, cloud: true },
+    providers: ["azure", "docker-server", "docker-local"],
   },
   {
     image: ghostLogo,
@@ -129,6 +130,7 @@ export const webServiceOptions: ServiceOption[] = [
     title: "Ghost",
     description: "Servicio de Ghost",
     deployOptions: { local: true, cloud: true },
+    providers: ["azure", "docker-server", "docker-local"],
   },
 ];
 
@@ -136,9 +138,50 @@ export const webServiceOptions: ServiceOption[] = [
 export const apiServiceOptions: ServiceOption[] = [
   {
     image: awsLogo,
-    service: "express",
-    title: "Express",
-    description: "API service using Express.js",
+    service: "bedrockAccessGateway",
+    title: "Bedrock Access Gateway",
+    description: "API service for conecting to bedrock",
     deployOptions: { local: true, cloud: true },
+    providers: ["azure", "docker-server", "docker-local"],
+  },
+];
+
+// Opciones de servicio para "Database"
+export const databaseServiceOptions: ServiceOption[] = [
+  {
+    image: postgreLogo,
+    service: "postgre",
+    title: "PostgreSQL",
+    description: "Instancia de base de datos PostgreSQL",
+    deployOptions: { local: true, cloud: true },
+    providers: ["docker-local", "docker-server", "azure"],
+  },
+  {
+    image: mysqlLogo,
+    service: "mysql",
+    title: "MySQL",
+    description: "Instancia de base de datos MySQL",
+    deployOptions: { local: true, cloud: true },
+    providers: ["docker-local", "docker-server"],
+  }
+];
+
+// Opciones de servicio para "Storage"
+export const storageServiceOptions: ServiceOption[] = [
+  {
+    image: awsLogo,
+    service: "s3",
+    title: "Amazon S3",
+    description: "Almacenamiento de objetos con S3",
+    deployOptions: { local: true, cloud: true },
+    providers: ["docker-server", "azure"],
+  },
+  {
+    image: localstackLogo,
+    service: "localstack-storage",
+    title: "LocalStack Storage",
+    description: "Simulación de S3 usando LocalStack",
+    deployOptions: { local: true, cloud: true },
+    providers: ["docker-local", "docker-server"],
   },
 ];

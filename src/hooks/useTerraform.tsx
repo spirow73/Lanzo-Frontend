@@ -26,19 +26,22 @@ interface DestroyResponse {
 interface UseTerraformResult {
   loading: boolean;
   error: AxiosError | null;
-  deploy: (service: string) => Promise<DeployResponse | undefined>;
-  destroy: (service: string) => Promise<DestroyResponse | undefined>;
+  deploy: (service: string, body: Record<string, string>) => Promise<DeployResponse | undefined>;
+  destroy: (service: string, body?: Record<string, string>) => Promise<DestroyResponse | undefined>;
 }
 
 function useTerraform(): UseTerraformResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AxiosError | null>(null);
 
-  const deploy = async (service: string): Promise<DeployResponse | undefined> => {
+  const deploy = async (service: string, body: Record<string, string>): Promise<DeployResponse | undefined> => {
     setLoading(true);
     setError(null);
+    console.log('useTerraform.deploy called:', service, body);
     try {
-      const response = await axios.post<DeployResponse>(`${API_BASE}/deploy/${service}`);
+      // Si el servicio es 'customvm' (Azure), usa el endpoint correcto
+      const endpoint = service === 'customvm' ? `${API_BASE}/customvm` : `${API_BASE}/deploy/${service}`;
+      const response = await axios.post<DeployResponse>(endpoint, body);
       console.log('Despliegue exitoso:', response.data);
       return response.data;
     } catch (err) {
@@ -51,11 +54,16 @@ function useTerraform(): UseTerraformResult {
     }
   };
 
-  const destroy = async (service: string): Promise<DestroyResponse | undefined> => {
+  const destroy = async (service: string, body?: Record<string, string>): Promise<DestroyResponse | undefined> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post<DestroyResponse>(`${API_BASE}/destroy/${service}`);
+      let response;
+      if (service === 'customvm') {
+        response = await axios.delete<DestroyResponse>(`${API_BASE}/customvm`, { data: body });
+      } else {
+        response = await axios.post<DestroyResponse>(`${API_BASE}/destroy/${service}`);
+      }
       console.log('Recursos destruidos:', response.data);
       return response.data;
     } catch (err) {

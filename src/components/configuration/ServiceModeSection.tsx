@@ -1,6 +1,6 @@
 "use client";
 import { useDeployment } from "../../contexts/useDeployment";
-import { webServiceOptions, apiServiceOptions } from "../../data/providers";
+import { webServiceOptions, apiServiceOptions, databaseServiceOptions, storageServiceOptions } from "../../data/providers";
 
 const ServiceModeSection = () => {
   const {
@@ -22,6 +22,10 @@ const ServiceModeSection = () => {
       ? webServiceOptions
       : selectedApplication === "api"
       ? apiServiceOptions
+      : selectedApplication === "database"
+      ? databaseServiceOptions
+      : selectedApplication === "storage"
+      ? storageServiceOptions
       : [];
 
   return (
