@@ -64,12 +64,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete, onToggleSt
       </div>
     </div>
     <div className="flex gap-3 md:flex-col md:gap-3 min-w-[120px]">
-      <button
-        onClick={() => onToggleStatus(project.id)}
-        className={`px-6 py-3 rounded-lg font-semibold text-lg transition shadow-sm ${project.estado === 'desplegado' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-      >
-        {project.estado === 'desplegado' ? 'Pausar' : project.estado === 'en pausa' ? 'Reanudar' : 'Sin acción'}
-      </button>
+      {project.proveedor?.toLowerCase() !== 'azure' && (
+        <button
+          onClick={() => onToggleStatus(project.id)}
+          className={`px-6 py-3 rounded-lg font-semibold text-lg transition shadow-sm ${project.estado === 'desplegado' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+        >
+          {project.estado === 'desplegado' ? 'Pausar' : project.estado === 'en pausa' ? 'Reanudar' : 'Sin acción'}
+        </button>
+      )}
       <button
         onClick={() => onDelete(project.id)}
         className="px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-semibold text-lg transition shadow-sm"

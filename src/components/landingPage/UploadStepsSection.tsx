@@ -7,23 +7,29 @@ const UploadStepsSection: React.FC = () => {
         <h2 className="text-3xl font-bold text-white mb-8 text-center">
           Sube tus servicios a la nube
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(255, 0, 242, 0.2)">
-            <h3 className="text-2xl font-bold text-white mb-4">Paso 1: Selecciona tus servicios</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Paso 1: Selecciona tu proveedor</h3>
             <p className="text-white">
-              Elige los servicios que deseas subir, ya sea arrastrándolos o seleccionándolos desde tu dispositivo.
+              Elige el proveedor de la con el que deseas subir tus servicios.
             </p>
           </SpotlightCard>
           <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(255, 0, 242, 0.2)">
-            <h3 className="text-2xl font-bold text-white mb-4">Paso 2: Inicia la carga</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Paso 2: Selecciona el tipo de aplicación</h3>
             <p className="text-white">
-              Haz clic en el botón de "Subir" y espera a que la carga se complete de forma segura.
+              Elige el tipo de aplicación que deseas subir. Desde aplicaciones preconfiguradas hasta tus proyectos propios.
             </p>
           </SpotlightCard>
           <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(255, 0, 242, 0.2)">
-            <h3 className="text-2xl font-bold text-white mb-4">Paso 3: Accede a tu nube</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Paso 3: Configura tu aplicación</h3>
             <p className="text-white">
-              Una vez subidos, podrás acceder y utilizar tus servicios desde cualquier dispositivo.
+              Configura tus variables de entorno y otros parámetros necesarios para tu aplicación.
+            </p>
+          </SpotlightCard>
+          <SpotlightCard className="p-8 min-h-[300px] flex flex-col justify-center" spotlightColor="rgba(255, 0, 242, 0.2)">
+            <h3 className="text-2xl font-bold text-white mb-4">Paso 4: Accede a tu nube</h3>
+            <p className="text-white">
+              Una vez subidos, podrás acceder y gestionar tus servicios desde cualquier dispositivo.
             </p>
           </SpotlightCard>
         </div>
